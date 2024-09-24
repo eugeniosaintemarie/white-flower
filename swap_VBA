@@ -1,20 +1,36 @@
-Sub RecorrerCeldasFiltradas()
-    Dim celda As Range
-    Dim rango As Range
+Sub ProcesarCeldasFiltradasOtroArchivo()
+    Dim archivoDatos                    As Workbook
+    Dim hojaDatos                       As Worksheet
+    Dim rango                           As Range
+    Dim celda                           As Range
+    Dim rutaArchivo                     As String
     
-    Set rango = Range("A1:A100")
+    rutaArchivo = "C:\ruta\del\archivo\datos.xlsx"
     
     On Error Resume Next
-    Set rango = rango.SpecialCells(xlCellTypeVisible)
+    Set archivoDatos = Workbooks.Open(rutaArchivo)
+    On Error GoTo 0
+    
+    If archivoDatos Is Nothing Then
+        MsgBox "No se pudo abrir el archivo con la información a procesar", vbExclamation
+        Exit Sub
+    End If
+    
+    Set hojaDatos = archivoDatos.Sheets("Hoja1")
+    
+    On Error Resume Next
+    Set rango = hojaDatos.Range("A1:A100").SpecialCells(xlCellTypeVisible)
     On Error GoTo 0
     
     If Not rango Is Nothing Then
         For Each celda In rango
-            If celda.Value <> "" Then              
-
+            If celda.Value <> "" Then
+                ' AIS
             End If
         Next celda
     Else
-        MsgBox "No hay registros visibles para procesar"
+        MsgBox "No hay registros visibles para procesar", vbInformation
     End If
+    
+    archivoDatos.Close SaveChanges:=False
 End Sub
