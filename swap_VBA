@@ -1,0 +1,20 @@
+Sub RecorrerCeldasFiltradas()
+    Dim celda As Range
+    Dim rango As Range
+    
+    Set rango = Range("A1:A100")
+    
+    On Error Resume Next
+    Set rango = rango.SpecialCells(xlCellTypeVisible)
+    On Error GoTo 0
+    
+    If Not rango Is Nothing Then
+        For Each celda In rango
+            If celda.Value <> "" Then              
+
+            End If
+        Next celda
+    Else
+        MsgBox "No hay registros visibles para procesar"
+    End If
+End Sub
