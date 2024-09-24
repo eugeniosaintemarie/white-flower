@@ -1,50 +1,47 @@
-import os
-import hashlib
+import pandas as pd
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
-carpeta1 = "ruta/de/la/primera/carpeta"
-carpeta2 = "ruta/de/la/segunda/carpeta"
+ruta_archivo = "C:/Users/Administrator/Desktop/Base.xlsx"
+df = pd.read_excel(ruta_archivo)
 
-archivo_diferencias = os.path.join(os.path.dirname(__file__), "diferencias.txt")
+df["FECHA_EFECTO"] = pd.to_datetime(
+    df["FECHA_EFECTO"].astype(str), format="%Y%m%d", errors="coerce"
+)
+df["FECHA_PROXIMO_AUMENTO"] = pd.to_datetime(
+    df["FECHA_PROXIMO_AUMENTO"].astype(str), format="%Y%m%d", errors="coerce"
+)
+
+FECHA_ACTUAL = datetime.now()
 
 
-def calcular_hash(ruta_archivo):
-    hash_sha256 = hashlib.sha256()
-    try:
-        with open(ruta_archivo, "rb") as file:
-            while chunk := file.read(8192):
-                hash_sha256.update(chunk)
-        return hash_sha256.hexdigest()
-    except Exception as e:
-        print(f"Error al calcular hash de {ruta_archivo}: {e}")
+def calcular_fecha_proximo_aumento(FECHA_EFECTO, FRECUENCIA):
+    if pd.isnull(FECHA_EFECTO) or pd.isnull(FRECUENCIA):
         return None
+    FECHA_AUMENTO = FECHA_EFECTO + relativedelta(months=+FRECUENCIA)
+
+    while FECHA_AUMENTO <= FECHA_ACTUAL:
+        FECHA_AUMENTO += relativedelta(months=+FRECUENCIA)
+
+    return FECHA_AUMENTO
 
 
-def comparar_pdfs(carpeta1, carpeta2):
-    archivos_diferentes = []
+df["Fecha_Calculada_Aumento"] = df.apply(
+    lambda row: calcular_fecha_proximo_aumento(row["FECHA_EFECTO"], row["FRECUENCIA"]),
+    axis=1,
+)
 
-    archivos_carpeta1 = {f for f in os.listdir(carpeta1) if f.lower().endswith(".pdf")}
-    archivos_carpeta2 = {f for f in os.listdir(carpeta2) if f.lower().endswith(".pdf")}
+df["FECHA_EFECTO"] = df["FECHA_EFECTO"].dt.strftime("%Y%m%d")
+df["FECHA_PROXIMO_AUMENTO"] = df["FECHA_PROXIMO_AUMENTO"].dt.strftime("%Y%m%d")
+df["Fecha_Calculada_Aumento"] = df["Fecha_Calculada_Aumento"].dt.strftime("%Y%m%d")
 
-    archivos_comunes = archivos_carpeta1 & archivos_carpeta2
+df["Diferencia"] = df["Fecha_Calculada_Aumento"] != df["FECHA_PROXIMO_AUMENTO"]
 
-    for archivo in archivos_comunes:
-        ruta_pdf1 = os.path.join(carpeta1, archivo)
-        ruta_pdf2 = os.path.join(carpeta2, archivo)
+columnas_ordenadas = [col for col in df.columns if col != "Fecha_Calculada_Aumento"] + [
+    "Fecha_Calculada_Aumento"
+]
+df = df[columnas_ordenadas]
 
-        hash1 = calcular_hash(ruta_pdf1)
-        hash2 = calcular_hash(ruta_pdf2)
+df.to_excel(ruta_archivo, index=False)
 
-        if hash1 != hash2:
-            archivos_diferentes.append(archivo)
-
-    return archivos_diferentes
-
-
-diferencias = comparar_pdfs(carpeta1, carpeta2)
-
-if diferencias:
-    with open(archivo_diferencias, "w") as file:
-        file.write("\n".join(diferencias))
-    print(f"Se encontraron diferencias. Listadas en archivo: {archivo_diferencias}")
-else:
-    print("No hay diferencias en los archivos PDF.")
+print("Archivo procesado y sobreescrito con éxito.")
