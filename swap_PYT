@@ -1,58 +1,62 @@
-¡Entendido! Lo que necesitas es, después de arrastrar las fórmulas, **copiar y pegar los valores** de la columna `O` (de `O2` hacia abajo) y convertirlos a número, eliminando las fórmulas que haya en esas celdas.
-
-Aquí te dejo el código modificado que, después de arrastrar las fórmulas y antes de aplicar el filtro, **copia y pega los valores** de la columna `O` y los convierte en números:
-
-### Código:
-
-```python
 import openpyxl
+import warnings
 
-# Cargar el archivo Excel original
-archivo = "ruta/al/archivo.xlsx"
+warnings.simplefilter("ignore")
+
+# Cargar el archivo original
+archivo = "C:/Users/45133928/Desktop/ESPWR100.xlsx"
 wb = openpyxl.load_workbook(archivo)
-hoja = wb.active  # Cambiar si es necesario a la hoja que quieras trabajar
+hoja = wb.active  # Hoja activa
 
-# Paso 1: Simular arrastrar fórmulas de C3 y D3 hacia abajo (como antes)
-for fila in range(3, hoja.max_row + 1):
-    formula_c3 = hoja['C3'].value
-    formula_d3 = hoja['D3'].value
-    
-    nueva_formula_c = formula_c3.replace('3', str(fila))
-    nueva_formula_d = formula_d3.replace('3', str(fila))
-    
-    hoja[f'C{fila}'] = nueva_formula_c
-    hoja[f'D{fila}'] = nueva_formula_d
+# Paso 1: Simular arrastrar las fórmulas desde L2, M2 y O2 hacia abajo
+for fila in range(2, hoja.max_row + 1):
+    formula_l2 = hoja['L2'].value
+    formula_m2 = hoja['M2'].value
+    formula_n2 = hoja['N2'].value
+    formula_o2 = hoja['O2'].value
 
-wb.save(archivo)  # Guardamos los cambios después de arrastrar las fórmulas
+    nueva_formula_l = formula_l2.replace('2', str(fila))
+    nueva_formula_m = formula_m2.replace('2', str(fila))
+    nueva_formula_n = formula_n2.replace('2', str(fila))
+    nueva_formula_o = formula_o2.replace('2', str(fila))
 
-# Paso 2: Copiar y pegar los valores de la columna O (O2 en adelante), convirtiendo a número
-for fila in range(2, hoja.max_row + 1):  # Comenzando desde la fila 2 (O2)
-    valor_celda_o = hoja[f'O{fila}'].value
-    
-    # Verificar si el valor es numérico, si no, convertirlo (si es posible)
-    if isinstance(valor_celda_o, str) and valor_celda_o.isdigit():
-        valor_celda_o = float(valor_celda_o)  # Convertir a número si es texto numérico
-    
-    hoja[f'O{fila}'] = valor_celda_o  # Reemplazar la fórmula o texto con el valor numérico
+    hoja[f'L{fila}'] = nueva_formula_l
+    hoja[f'M{fila}'] = nueva_formula_m
+    hoja[f'N{fila}'] = nueva_formula_n
+    hoja[f'O{fila}'] = nueva_formula_o
 
-# Paso 3: Aplicar filtro a la columna K (columna 11)
-hoja.auto_filter.ref = hoja.dimensions
-hoja.auto_filter.add_filter_column(10, ["TRUE"])  # Filtrar la columna K por valor "TRUE"
-
-# Guardar el archivo original con los valores en la columna O y el filtro aplicado
+# Guardar el archivo después de arrastrar las fórmulas
 wb.save(archivo)
-```
 
-### Explicación de los pasos adicionales:
+# Recargar el archivo para obtener los valores de las fórmulas
+wb = openpyxl.load_workbook(archivo, data_only=True)
+hoja = wb.active
 
-1. **Copiar y pegar los valores de la columna O**:
-   - Recorremos las celdas de la columna O (`O2` hacia abajo).
-   - Si el valor es una fórmula o un texto numérico, lo convertimos a un número (si es necesario) usando `float()`.
-   - Finalmente, sobrescribimos la celda `O{fila}` con el valor en lugar de la fórmula o texto original.
+# Paso 2: Copiar y pegar los valores de las celdas L, M, N y O (quitar fórmulas)
+for fila in range(2, hoja.max_row + 1):
+    valor_celda_l = hoja[f'L{fila}'].value
+    valor_celda_m = hoja[f'M{fila}'].value
+    valor_celda_n = hoja[f'N{fila}'].value
+    valor_celda_o = hoja[f'O{fila}'].value
 
-2. **Aplicar el filtro**: Después de copiar y pegar los valores en la columna O, aplicamos el filtro en la columna K como antes, filtrando por `TRUE`.
+    # Reabrir el archivo sin data_only para pegar los valores
+    wb_original = openpyxl.load_workbook(archivo)
+    hoja_original = wb_original.active
 
-### Resultado:
-- **Las fórmulas en la columna O se reemplazarán por los valores**.
-- Los valores en la columna O se convertirán a números, si es necesario.
-- **El archivo mantendrá el mismo nombre** y se actualizará con
+    hoja_original[f'L{fila}'] = valor_celda_l
+    hoja_original[f'M{fila}'] = valor_celda_m
+    hoja_original[f'N{fila}'] = valor_celda_n
+    hoja_original[f'O{fila}'] = valor_celda_o
+
+# Guardar el archivo con los valores copiados
+wb_original.save(archivo)
+
+# Paso 3: Aplicar filtro en la columna K (columna 11)
+wb_original = openpyxl.load_workbook(archivo)
+hoja_original = wb_original.active
+
+hoja_original.auto_filter.ref = hoja_original.dimensions
+hoja_original.auto_filter.add_filter_column(10, ["TRUE"])  # Columna K es la 11, en Python es índice 10
+
+# Guardar el archivo final con el filtro aplicado
+wb_original.save(archivo)
