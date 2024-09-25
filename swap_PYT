@@ -40,5 +40,11 @@ for fila in range(3, hoja.max_row + 1):
     hoja_original[f'C{fila}'] = valor_celda_c
     hoja_original[f'D{fila}'] = valor_celda_d
 
+# Paso 1: Agregar un filtro a la cabecera (suponiendo que está en la fila 1)
+hoja.auto_filter.ref = hoja.dimensions  # Aplicar el filtro a todas las columnas con datos
+
+# Paso 2: Aplicar filtro específicamente a la columna K (columna 11)
+hoja.auto_filter.add_filter_column(10, ["TRUE"])  # En Python, las columnas empiezan desde 0 (10 corresponde a 'K')
+
 # Guardar el archivo final con los valores
 wb_original.save("ruta/archivo_final_con_valores.xlsx")
