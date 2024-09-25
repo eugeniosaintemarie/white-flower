@@ -1,50 +1,58 @@
+¡Entendido! Lo que necesitas es, después de arrastrar las fórmulas, **copiar y pegar los valores** de la columna `O` (de `O2` hacia abajo) y convertirlos a número, eliminando las fórmulas que haya en esas celdas.
+
+Aquí te dejo el código modificado que, después de arrastrar las fórmulas y antes de aplicar el filtro, **copia y pega los valores** de la columna `O` y los convierte en números:
+
+### Código:
+
+```python
 import openpyxl
 
-# Cargar el archivo Excel
+# Cargar el archivo Excel original
 archivo = "ruta/al/archivo.xlsx"
 wb = openpyxl.load_workbook(archivo)
 hoja = wb.active  # Cambiar si es necesario a la hoja que quieras trabajar
 
-# Paso 1: Simular arrastrar fórmulas de C3 y D3 hacia abajo
-for fila in range(3, hoja.max_row + 1):  # Desde la fila 3 hasta la última fila con datos
-    # Fórmulas originales en C3 y D3
-    formula_c3 = hoja['C3'].value  # Obtener fórmula de la celda C3
-    formula_d3 = hoja['D3'].value  # Obtener fórmula de la celda D3
+# Paso 1: Simular arrastrar fórmulas de C3 y D3 hacia abajo (como antes)
+for fila in range(3, hoja.max_row + 1):
+    formula_c3 = hoja['C3'].value
+    formula_d3 = hoja['D3'].value
     
-    # Modificar las fórmulas dinámicamente para cada fila
     nueva_formula_c = formula_c3.replace('3', str(fila))
     nueva_formula_d = formula_d3.replace('3', str(fila))
     
-    # Asignar las nuevas fórmulas a las celdas Cn y Dn
     hoja[f'C{fila}'] = nueva_formula_c
     hoja[f'D{fila}'] = nueva_formula_d
 
-# Guardar temporalmente con las fórmulas arrastradas
-wb.save("ruta/archivo_actualizado_con_formulas.xlsx")
+wb.save(archivo)  # Guardamos los cambios después de arrastrar las fórmulas
 
-# Paso 2: Volver a abrir el archivo con las fórmulas ya evaluadas
-wb = openpyxl.load_workbook("ruta/archivo_actualizado_con_formulas.xlsx", data_only=True)
-hoja = wb.active
-
-# Paso 3: Reemplazar las fórmulas por los valores
-for fila in range(3, hoja.max_row + 1):
-    # Obtener los valores calculados (evaluados) de las celdas Cn y Dn
-    valor_celda_c = hoja[f'C{fila}'].value
-    valor_celda_d = hoja[f'D{fila}'].value
+# Paso 2: Copiar y pegar los valores de la columna O (O2 en adelante), convirtiendo a número
+for fila in range(2, hoja.max_row + 1):  # Comenzando desde la fila 2 (O2)
+    valor_celda_o = hoja[f'O{fila}'].value
     
-    # Volver a abrir el archivo original para escribir los valores
-    wb_original = openpyxl.load_workbook(archivo)
-    hoja_original = wb_original.active
+    # Verificar si el valor es numérico, si no, convertirlo (si es posible)
+    if isinstance(valor_celda_o, str) and valor_celda_o.isdigit():
+        valor_celda_o = float(valor_celda_o)  # Convertir a número si es texto numérico
     
-    # Asignar los valores en lugar de las fórmulas
-    hoja_original[f'C{fila}'] = valor_celda_c
-    hoja_original[f'D{fila}'] = valor_celda_d
+    hoja[f'O{fila}'] = valor_celda_o  # Reemplazar la fórmula o texto con el valor numérico
 
-# Paso 1: Agregar un filtro a la cabecera (suponiendo que está en la fila 1)
-hoja.auto_filter.ref = hoja.dimensions  # Aplicar el filtro a todas las columnas con datos
+# Paso 3: Aplicar filtro a la columna K (columna 11)
+hoja.auto_filter.ref = hoja.dimensions
+hoja.auto_filter.add_filter_column(10, ["TRUE"])  # Filtrar la columna K por valor "TRUE"
 
-# Paso 2: Aplicar filtro específicamente a la columna K (columna 11)
-hoja.auto_filter.add_filter_column(10, ["TRUE"])  # En Python, las columnas empiezan desde 0 (10 corresponde a 'K')
+# Guardar el archivo original con los valores en la columna O y el filtro aplicado
+wb.save(archivo)
+```
 
-# Guardar el archivo final con los valores
-wb_original.save("ruta/archivo_final_con_valores.xlsx")
+### Explicación de los pasos adicionales:
+
+1. **Copiar y pegar los valores de la columna O**:
+   - Recorremos las celdas de la columna O (`O2` hacia abajo).
+   - Si el valor es una fórmula o un texto numérico, lo convertimos a un número (si es necesario) usando `float()`.
+   - Finalmente, sobrescribimos la celda `O{fila}` con el valor en lugar de la fórmula o texto original.
+
+2. **Aplicar el filtro**: Después de copiar y pegar los valores en la columna O, aplicamos el filtro en la columna K como antes, filtrando por `TRUE`.
+
+### Resultado:
+- **Las fórmulas en la columna O se reemplazarán por los valores**.
+- Los valores en la columna O se convertirán a números, si es necesario.
+- **El archivo mantendrá el mismo nombre** y se actualizará con
