@@ -1,47 +1,44 @@
-import pandas as pd
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
+import openpyxl
 
-ruta_archivo = "C:/Users/Administrator/Desktop/Base.xlsx"
-df = pd.read_excel(ruta_archivo)
+# Cargar el archivo Excel
+archivo = "ruta/al/archivo.xlsx"
+wb = openpyxl.load_workbook(archivo)
+hoja = wb.active  # Cambiar si es necesario a la hoja que quieras trabajar
 
-df["FECHA_EFECTO"] = pd.to_datetime(
-    df["FECHA_EFECTO"].astype(str), format="%Y%m%d", errors="coerce"
-)
-df["FECHA_PROXIMO_AUMENTO"] = pd.to_datetime(
-    df["FECHA_PROXIMO_AUMENTO"].astype(str), format="%Y%m%d", errors="coerce"
-)
+# Paso 1: Simular arrastrar fórmulas de C3 y D3 hacia abajo
+for fila in range(3, hoja.max_row + 1):  # Desde la fila 3 hasta la última fila con datos
+    # Fórmulas originales en C3 y D3
+    formula_c3 = hoja['C3'].value  # Obtener fórmula de la celda C3
+    formula_d3 = hoja['D3'].value  # Obtener fórmula de la celda D3
+    
+    # Modificar las fórmulas dinámicamente para cada fila
+    nueva_formula_c = formula_c3.replace('3', str(fila))
+    nueva_formula_d = formula_d3.replace('3', str(fila))
+    
+    # Asignar las nuevas fórmulas a las celdas Cn y Dn
+    hoja[f'C{fila}'] = nueva_formula_c
+    hoja[f'D{fila}'] = nueva_formula_d
 
-FECHA_ACTUAL = datetime.now()
+# Guardar temporalmente con las fórmulas arrastradas
+wb.save("ruta/archivo_actualizado_con_formulas.xlsx")
 
+# Paso 2: Volver a abrir el archivo con las fórmulas ya evaluadas
+wb = openpyxl.load_workbook("ruta/archivo_actualizado_con_formulas.xlsx", data_only=True)
+hoja = wb.active
 
-def calcular_fecha_proximo_aumento(FECHA_EFECTO, FRECUENCIA):
-    if pd.isnull(FECHA_EFECTO) or pd.isnull(FRECUENCIA):
-        return None
-    FECHA_AUMENTO = FECHA_EFECTO + relativedelta(months=+FRECUENCIA)
+# Paso 3: Reemplazar las fórmulas por los valores
+for fila in range(3, hoja.max_row + 1):
+    # Obtener los valores calculados (evaluados) de las celdas Cn y Dn
+    valor_celda_c = hoja[f'C{fila}'].value
+    valor_celda_d = hoja[f'D{fila}'].value
+    
+    # Volver a abrir el archivo original para escribir los valores
+    wb_original = openpyxl.load_workbook(archivo)
+    hoja_original = wb_original.active
+    
+    # Asignar los valores en lugar de las fórmulas
+    hoja_original[f'C{fila}'] = valor_celda_c
+    hoja_original[f'D{fila}'] = valor_celda_d
 
-    while FECHA_AUMENTO <= FECHA_ACTUAL:
-        FECHA_AUMENTO += relativedelta(months=+FRECUENCIA)
-
-    return FECHA_AUMENTO
-
-
-df["Fecha_Calculada_Aumento"] = df.apply(
-    lambda row: calcular_fecha_proximo_aumento(row["FECHA_EFECTO"], row["FRECUENCIA"]),
-    axis=1,
-)
-
-df["FECHA_EFECTO"] = df["FECHA_EFECTO"].dt.strftime("%Y%m%d")
-df["FECHA_PROXIMO_AUMENTO"] = df["FECHA_PROXIMO_AUMENTO"].dt.strftime("%Y%m%d")
-df["Fecha_Calculada_Aumento"] = df["Fecha_Calculada_Aumento"].dt.strftime("%Y%m%d")
-
-df["Diferencia"] = df["Fecha_Calculada_Aumento"] != df["FECHA_PROXIMO_AUMENTO"]
-
-columnas_ordenadas = [col for col in df.columns if col != "Fecha_Calculada_Aumento"] + [
-    "Fecha_Calculada_Aumento"
-]
-df = df[columnas_ordenadas]
-
-df.to_excel(ruta_archivo, index=False)
-
-print("Archivo procesado y sobreescrito con éxito.")
+# Guardar el archivo final con los valores
+wb_original.save("ruta/archivo_final_con_valores.xlsx")
