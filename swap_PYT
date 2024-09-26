@@ -1,25 +1,19 @@
-import pandas as pd
+    if isinstance(formula_l, str):
+        nueva_formula_l = formula_l.replace('2', str(fila))
+    else:
+        nueva_formula_l = formula_l  # Si es un número, no se hace nada
 
-# Cargar el archivo Excel en un DataFrame de pandas
-archivo = "C:/Users/45133928/Desktop/ESPWR100.xlsx"
+    if isinstance(formula_m, str):
+        nueva_formula_m = formula_m.replace('2', str(fila))
+    else:
+        nueva_formula_m = formula_m
 
-# Lee todas las hojas del archivo de Excel en un diccionario de DataFrames
-df = pd.read_excel(archivo, sheet_name=None, engine='openpyxl')
+    if isinstance(formula_n, str):
+        nueva_formula_n = formula_n.replace('2', str(fila))
+    else:
+        nueva_formula_n = formula_n
 
-# Supongamos que estamos trabajando con la primera hoja
-hoja = list(df.keys())[0]  # Nombre de la primera hoja
-df_hoja = df[hoja]
-
-# Paso 1: Copiar y pegar los valores de las fórmulas en la columna O
-# Si ya tienes las fórmulas en pandas, solo necesitas sobreescribir los valores
-df_hoja['O'] = pd.to_numeric(df_hoja['O'], errors='coerce')  # Convertir columna O a números
-
-# Paso 2: Aplicar el filtro en la columna K para conservar solo los valores "TRUE"
-df_filtrado = df_hoja[df_hoja['K'] == True]  # Filtrar por valores True en la columna K
-
-# Paso 3: Guardar el archivo Excel modificado
-# Sobrescribir el archivo original o guardar en uno nuevo
-with pd.ExcelWriter(archivo, engine='openpyxl', mode='w') as writer:
-    df_filtrado.to_excel(writer, sheet_name=hoja, index=False)
-
-print("Proceso completado. Archivo guardado.")
+    if isinstance(formula_o, str):
+        nueva_formula_o = formula_o.replace('2', str(fila))
+    else:
+        nueva_formula_o = formula_o
