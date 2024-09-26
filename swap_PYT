@@ -1,19 +1,45 @@
-    if isinstance(formula_l, str):
+import openpyxl
+
+# Cargar el archivo sin usar data_only para no perder las fórmulas
+archivo = "C:/Users/45133928/Desktop/ESPWR100.xlsx"
+wb = openpyxl.load_workbook(archivo)
+hoja = wb.active
+
+# Iterar sobre las filas desde la fila 2 hasta la última
+for fila in range(2, hoja.max_row + 1):
+    # Obtener los valores de las celdas en las columnas L, M, N, O
+    formula_l = hoja[f'L{fila}'].value
+    formula_m = hoja[f'M{fila}'].value
+    formula_n = hoja[f'N{fila}'].value
+    formula_o = hoja[f'O{fila}'].value
+
+    # Aplicar replace solo si el valor es una fórmula (es decir, una cadena que contiene '=')
+    if isinstance(formula_l, str) and "=" in formula_l:
         nueva_formula_l = formula_l.replace('2', str(fila))
     else:
-        nueva_formula_l = formula_l  # Si es un número, no se hace nada
+        nueva_formula_l = formula_l  # No hacer nada si no es fórmula
 
-    if isinstance(formula_m, str):
+    if isinstance(formula_m, str) and "=" in formula_m:
         nueva_formula_m = formula_m.replace('2', str(fila))
     else:
         nueva_formula_m = formula_m
 
-    if isinstance(formula_n, str):
+    if isinstance(formula_n, str) and "=" in formula_n:
         nueva_formula_n = formula_n.replace('2', str(fila))
     else:
         nueva_formula_n = formula_n
 
-    if isinstance(formula_o, str):
+    if isinstance(formula_o, str) and "=" in formula_o:
         nueva_formula_o = formula_o.replace('2', str(fila))
     else:
         nueva_formula_o = formula_o
+
+    # Reemplazar las fórmulas en las celdas
+    hoja[f'L{fila}'] = nueva_formula_l
+    hoja[f'M{fila}'] = nueva_formula_m
+    hoja[f'N{fila}'] = nueva_formula_n
+    hoja[f'O{fila}'] = nueva_formula_o
+
+# Guardar el archivo modificado sin perder las fórmulas
+wb.save("C:/Users/45133928/Desktop/ESPWR100_modificado.xlsx")
+print("Proceso completado.")
