@@ -1,0 +1,36 @@
+Sub ProcesarArchivo()
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Dim archivo As String
+    Dim ultimaFila As Long
+    Dim celda As Range
+    
+    ' Define el archivo a procesar (modifica la ruta según tu caso)
+    archivo = "C:\Users\45133928\Desktop\ESPWR100.xlsx"
+    
+    ' Abre el archivo
+    Set wb = Workbooks.Open(archivo)
+    Set ws = wb.Sheets(1) ' Asume que estás trabajando en la primera hoja
+
+    ' Encuentra la última fila con datos
+    ultimaFila = ws.Cells(ws.Rows.Count, "L").End(xlUp).Row
+    
+    ' 1. Simular F2 y Enter en las columnas L a P
+    For Each celda In ws.Range("L2:P" & ultimaFila)
+        celda.Formula = celda.Formula  ' Reescribe la fórmula para activarla
+    Next celda
+    
+    ' 2. Copiar valores de la columna O (reemplazar fórmulas por valores)
+    For Each celda In ws.Range("O2:O" & ultimaFila)
+        celda.Value = celda.Value  ' Reemplaza la fórmula con su valor
+    Next celda
+    
+    ' 3. Aplicar filtro en la columna P por TRUE
+    ws.Range("A1:P" & ultimaFila).AutoFilter Field:=16, Criteria1:="TRUE"
+    
+    ' Guardar y cerrar el archivo
+    wb.Close SaveChanges:=True
+
+    ' Mensaje de éxito
+    MsgBox "Proceso completado: Fórmulas actualizadas, valores pegados y filtro aplicado."
+End Sub
