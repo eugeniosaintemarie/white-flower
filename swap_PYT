@@ -1,45 +1,25 @@
-import openpyxl
+import pandas as pd
 
-# Cargar el archivo sin usar data_only para no perder las fórmulas
+# Cargar el archivo Excel en un DataFrame de pandas
 archivo = "C:/Users/45133928/Desktop/ESPWR100.xlsx"
-wb = openpyxl.load_workbook(archivo)
-hoja = wb.active
 
-# Iterar sobre las filas desde la fila 2 hasta la última
-for fila in range(2, hoja.max_row + 1):
-    # Obtener los valores de las celdas en las columnas L, M, N, O
-    formula_l = hoja[f'L{fila}'].value
-    formula_m = hoja[f'M{fila}'].value
-    formula_n = hoja[f'N{fila}'].value
-    formula_o = hoja[f'O{fila}'].value
+# Lee todas las hojas del archivo de Excel en un diccionario de DataFrames
+df = pd.read_excel(archivo, sheet_name=None, engine='openpyxl')
 
-    # Aplicar replace solo si el valor es una fórmula (es decir, una cadena que contiene '=')
-    if isinstance(formula_l, str) and "=" in formula_l:
-        nueva_formula_l = formula_l.replace('2', str(fila))
-    else:
-        nueva_formula_l = formula_l  # No hacer nada si no es fórmula
+# Supongamos que estamos trabajando con la primera hoja
+hoja = list(df.keys())[0]  # Nombre de la primera hoja
+df_hoja = df[hoja]
 
-    if isinstance(formula_m, str) and "=" in formula_m:
-        nueva_formula_m = formula_m.replace('2', str(fila))
-    else:
-        nueva_formula_m = formula_m
+# Paso 1: Copiar y pegar los valores de las fórmulas en la columna O
+# Si ya tienes las fórmulas en pandas, solo necesitas sobreescribir los valores
+df_hoja['O'] = pd.to_numeric(df_hoja['O'], errors='coerce')  # Convertir columna O a números
 
-    if isinstance(formula_n, str) and "=" in formula_n:
-        nueva_formula_n = formula_n.replace('2', str(fila))
-    else:
-        nueva_formula_n = formula_n
+# Paso 2: Aplicar el filtro en la columna K para conservar solo los valores "TRUE"
+df_filtrado = df_hoja[df_hoja['K'] == True]  # Filtrar por valores True en la columna K
 
-    if isinstance(formula_o, str) and "=" in formula_o:
-        nueva_formula_o = formula_o.replace('2', str(fila))
-    else:
-        nueva_formula_o = formula_o
+# Paso 3: Guardar el archivo Excel modificado
+# Sobrescribir el archivo original o guardar en uno nuevo
+with pd.ExcelWriter(archivo, engine='openpyxl', mode='w') as writer:
+    df_filtrado.to_excel(writer, sheet_name=hoja, index=False)
 
-    # Reemplazar las fórmulas en las celdas
-    hoja[f'L{fila}'] = nueva_formula_l
-    hoja[f'M{fila}'] = nueva_formula_m
-    hoja[f'N{fila}'] = nueva_formula_n
-    hoja[f'O{fila}'] = nueva_formula_o
-
-# Guardar el archivo modificado sin perder las fórmulas
-wb.save("C:/Users/45133928/Desktop/ESPWR100_modificado.xlsx")
-print("Proceso completado.")
+print("Proceso completado. Archivo guardado.")
