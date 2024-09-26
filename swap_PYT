@@ -1,25 +1,37 @@
 import pandas as pd
 
-# Cargar el archivo Excel en un DataFrame de pandas
 archivo = "C:/Users/45133928/Desktop/ESPWR100.xlsx"
 
-# Lee todas las hojas del archivo de Excel en un diccionario de DataFrames
+# Cargar el archivo Excel
 df = pd.read_excel(archivo, sheet_name=None, engine='openpyxl')
 
-# Supongamos que estamos trabajando con la primera hoja
-hoja = list(df.keys())[0]  # Nombre de la primera hoja
+# Asignar la hoja y limpiar nombres de columnas (por si tienen espacios)
+hoja = list(df.keys())[0]
 df_hoja = df[hoja]
+df_hoja.columns = df_hoja.columns.str.strip()  # Limpiar espacios en los nombres de columnas
 
-# Paso 1: Copiar y pegar los valores de las fórmulas en la columna O
-# Si ya tienes las fórmulas en pandas, solo necesitas sobreescribir los valores
-df_hoja['O'] = pd.to_numeric(df_hoja['O'], errors='coerce')  # Convertir columna O a números
+# Asegurarse de que las columnas necesarias existan y sean numéricas
+columnas = ['K', 'O']
+for col in columnas:
+    if col in df_hoja.columns:
+        df_hoja[col] = pd.to_numeric(df_hoja[col], errors='coerce')
+    else:
+        print(f"La columna '{col}' no existe en la hoja")
 
-# Paso 2: Aplicar el filtro en la columna K para conservar solo los valores "TRUE"
-df_filtrado = df_hoja[df_hoja['K'] == True]  # Filtrar por valores True en la columna K
+# Crear la columna 'P' comparando los valores de 'O' y 'K'
+if 'O' in df_hoja.columns and 'K' in df_hoja.columns:
+    df_hoja['P'] = df_hoja['O'] == df_hoja['K']  # Devuelve True o False
+else:
+    print("Las columnas 'O' y 'K' no existen o una de ellas falta, no se puede hacer la comparación.")
 
-# Paso 3: Guardar el archivo Excel modificado
-# Sobrescribir el archivo original o guardar en uno nuevo
-with pd.ExcelWriter(archivo, engine='openpyxl', mode='w') as writer:
+# Filtrar los valores True en la columna 'P'
+if 'P' in df_hoja.columns:
+    df_filtrado = df_hoja[df_hoja['P'] == True]
+else:
+    print("La columna 'P' no existe, no se puede filtrar")
+
+# Guardar los cambios en el mismo archivo Excel
+with pd.ExcelWriter(archivo, engine='openpyxl', mode='a') as writer:
     df_filtrado.to_excel(writer, sheet_name=hoja, index=False)
 
-print("Proceso completado. Archivo guardado.")
+print("Proceso completado. Archivo actualizado.")
