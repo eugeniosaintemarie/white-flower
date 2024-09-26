@@ -1,1 +1,19 @@
+Install-Module -Name Import-Excel -Force -Scope CurrentUser
 
+# Cargar el módulo
+Import-Module Import-Excel
+
+# Ruta del archivo Excel
+$archivo = "ruta\a\tu\archivo.xlsx"
+
+# Leer el contenido del archivo
+$datos = Import-Excel -Path $archivo
+
+# Agregar la fórmula a una nueva columna (por ejemplo, columna C)
+for ($i = 1; $i -le $datos.Count; $i++) {
+    # Suponiendo que A y B están en las columnas 1 y 2 respectivamente
+    $datos[$i - 1].C = "=A$i + B$i"  # Agrega la fórmula en la columna C
+}
+
+# Exportar el archivo con las fórmulas añadidas
+$datos | Export-Excel -Path $archivo -WorksheetName 'Hoja1' -AutoSize -Force
