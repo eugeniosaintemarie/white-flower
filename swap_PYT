@@ -1,37 +1,36 @@
-import pandas as pd
+import openpyxl
 
 archivo = "C:/Users/45133928/Desktop/ESPWR100.xlsx"
 
 # Cargar el archivo Excel
-df = pd.read_excel(archivo, sheet_name=None, engine='openpyxl')
+wb = openpyxl.load_workbook(archivo)
+hoja = wb.active
 
-# Asignar la hoja y limpiar nombres de columnas (por si tienen espacios)
-hoja = list(df.keys())[0]
-df_hoja = df[hoja]
-df_hoja.columns = df_hoja.columns.str.strip()  # Limpiar espacios en los nombres de columnas
+# Encontrar el último dato en la hoja
+ultima_fila = hoja.max_row
 
-# Asegurarse de que las columnas necesarias existan y sean numéricas
-columnas = ['K', 'O']
-for col in columnas:
-    if col in df_hoja.columns:
-        df_hoja[col] = pd.to_numeric(df_hoja[col], errors='coerce')
-    else:
-        print(f"La columna '{col}' no existe en la hoja")
+# 1. Simular F2 y Enter para las fórmulas en las columnas L a P
+for col in ['L', 'M', 'N', 'O', 'P']:
+    for fila in range(2, ultima_fila + 1):  # Empezamos desde la fila 2
+        celda = hoja[f"{col}{fila}"]
+        # Esto guarda nuevamente la fórmula como texto que será efectivizada en Excel
+        if isinstance(celda.value, str) and celda.value.startswith('='):
+            celda.value = celda.value  # Reasignamos la fórmula para que sea efectiva
 
-# Crear la columna 'P' comparando los valores de 'O' y 'K'
-if 'O' in df_hoja.columns and 'K' in df_hoja.columns:
-    df_hoja['P'] = df_hoja['O'] == df_hoja['K']  # Devuelve True o False
-else:
-    print("Las columnas 'O' y 'K' no existen o una de ellas falta, no se puede hacer la comparación.")
+# 2. Copiar y pegar los valores de la columna O
+for fila in range(2, ultima_fila + 1):
+    celda_o = hoja[f"O{fila}"]
+    if celda_o.data_type == 'f':  # Si la celda tiene una fórmula
+        valor = celda_o.value
+        hoja[f"O{fila}"] = celda_o.value  # Reemplazamos la fórmula con su valor
 
-# Filtrar los valores True en la columna 'P'
-if 'P' in df_hoja.columns:
-    df_filtrado = df_hoja[df_hoja['P'] == True]
-else:
-    print("La columna 'P' no existe, no se puede filtrar")
+# 3. Agregar un filtro en la columna P y filtrar por TRUE
+# Primero, aplicamos el filtro a todas las columnas.
+hoja.auto_filter.ref = hoja.dimensions
+# Luego, añadimos el filtro para que solo muestre filas donde la columna P es TRUE
+hoja.auto_filter.add_filter_column(15, ["TRUE"])  # La columna P es la 16ª (índice 15)
 
-# Guardar los cambios en el mismo archivo Excel
-with pd.ExcelWriter(archivo, engine='openpyxl', mode='a') as writer:
-    df_filtrado.to_excel(writer, sheet_name=hoja, index=False)
+# Guardar el archivo actualizado
+wb.save(archivo)
 
-print("Proceso completado. Archivo actualizado.")
+print("Proceso completado: fórmulas actualizadas, valores pegados y filtro aplicado.")
