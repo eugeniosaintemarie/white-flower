@@ -1,36 +1,45 @@
-Sub ProcesarCeldasFiltradasOtroArchivo()
-    Dim archivoDatos                    As Workbook
-    Dim hojaDatos                       As Worksheet
-    Dim rango                           As Range
-    Dim celda                           As Range
-    Dim rutaArchivo                     As String
-    
-    rutaArchivo = "C:\ruta\del\archivo\datos.xlsx"
-    
-    On Error Resume Next
-    Set archivoDatos = Workbooks.Open(rutaArchivo)
-    On Error GoTo 0
-    
-    If archivoDatos Is Nothing Then
-        MsgBox "No se pudo abrir el archivo con la información a procesar", vbExclamation
-        Exit Sub
-    End If
-    
-    Set hojaDatos = archivoDatos.Sheets("Hoja1")
-    
-    On Error Resume Next
-    Set rango = hojaDatos.Range("A1:A100").SpecialCells(xlCellTypeVisible)
-    On Error GoTo 0
-    
-    If Not rango Is Nothing Then
-        For Each celda In rango
-            If celda.Value <> "" Then
-                ' AIS
-            End If
-        Next celda
-    Else
-        MsgBox "No hay registros visibles para procesar", vbInformation
-    End If
-    
-    archivoDatos.Close SaveChanges:=False
-End Sub
+# Cargar la biblioteca de Excel
+$Excel = New-Object -ComObject Excel.Application
+$Excel.Visible = $true  # Establece en falso si no quieres mostrar Excel
+
+# Abre el archivo de Excel
+$archivo = "C:\Users\45133928\Desktop\ESPWR100.xlsx"
+$Workbook = $Excel.Workbooks.Open($archivo)
+$Worksheet = $Workbook.Sheets.Item(1)  # Asume que estás trabajando en la primera hoja
+
+# Encuentra la última fila con datos en la columna L
+$ultimaFila = $Worksheet.Cells($Worksheet.Rows.Count, "L").End(-4162).Row  # -4162 es para xlUp
+
+# Simular F2 y Enter en las columnas L a P
+for ($i = 2; $i -le $ultimaFila; $i++) {
+    for ($j = 12; $j -le 16; $j++) {  # Columna L es 12 y P es 16
+        $celda = $Worksheet.Cells($i, $j)
+        if ($celda.HasFormula) {
+            # Reasignar la fórmula para forzar el recalculo
+            $celda.Formula = $celda.Formula
+        }
+    }
+}
+
+# Copiar valores de la columna O (reemplazar fórmulas por valores)
+for ($i = 2; $i -le $ultimaFila; $i++) {
+    $celdaO = $Worksheet.Cells($i, 15)  # Columna O es 15
+    if (-not $celdaO.HasFormula) {
+        $celdaO.Value = $celdaO.Value  # Reemplaza la fórmula con su valor
+    }
+}
+
+# Aplicar filtro en la columna P por TRUE
+$Filtro = $Worksheet.Range("A1:P$ultimaFila")
+$Filtro.AutoFilter(16, $true)  # 16 es el número de la columna P
+
+# Guardar y cerrar el archivo
+$Workbook.Save()
+$Workbook.Close()
+$Excel.Quit()
+
+# Liberar el objeto COM
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($Excel)
+
+# Mensaje de éxito
+Write-Host "Proceso completado: Fórmulas actualizadas, valores pegados y filtro aplicado."
