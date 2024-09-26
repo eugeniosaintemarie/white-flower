@@ -1,62 +1,25 @@
-import openpyxl
-import warnings
+import pandas as pd
 
-warnings.simplefilter("ignore")
-
-# Cargar el archivo original
+# Cargar el archivo Excel en un DataFrame de pandas
 archivo = "C:/Users/45133928/Desktop/ESPWR100.xlsx"
-wb = openpyxl.load_workbook(archivo)
-hoja = wb.active  # Hoja activa
 
-# Paso 1: Simular arrastrar las fórmulas desde L2, M2 y O2 hacia abajo
-for fila in range(2, hoja.max_row + 1):
-    formula_l2 = hoja['L2'].value
-    formula_m2 = hoja['M2'].value
-    formula_n2 = hoja['N2'].value
-    formula_o2 = hoja['O2'].value
+# Lee todas las hojas del archivo de Excel en un diccionario de DataFrames
+df = pd.read_excel(archivo, sheet_name=None, engine='openpyxl')
 
-    nueva_formula_l = formula_l2.replace('2', str(fila))
-    nueva_formula_m = formula_m2.replace('2', str(fila))
-    nueva_formula_n = formula_n2.replace('2', str(fila))
-    nueva_formula_o = formula_o2.replace('2', str(fila))
+# Supongamos que estamos trabajando con la primera hoja
+hoja = list(df.keys())[0]  # Nombre de la primera hoja
+df_hoja = df[hoja]
 
-    hoja[f'L{fila}'] = nueva_formula_l
-    hoja[f'M{fila}'] = nueva_formula_m
-    hoja[f'N{fila}'] = nueva_formula_n
-    hoja[f'O{fila}'] = nueva_formula_o
+# Paso 1: Copiar y pegar los valores de las fórmulas en la columna O
+# Si ya tienes las fórmulas en pandas, solo necesitas sobreescribir los valores
+df_hoja['O'] = pd.to_numeric(df_hoja['O'], errors='coerce')  # Convertir columna O a números
 
-# Guardar el archivo después de arrastrar las fórmulas
-wb.save(archivo)
+# Paso 2: Aplicar el filtro en la columna K para conservar solo los valores "TRUE"
+df_filtrado = df_hoja[df_hoja['K'] == True]  # Filtrar por valores True en la columna K
 
-# Recargar el archivo para obtener los valores de las fórmulas
-wb = openpyxl.load_workbook(archivo, data_only=True)
-hoja = wb.active
+# Paso 3: Guardar el archivo Excel modificado
+# Sobrescribir el archivo original o guardar en uno nuevo
+with pd.ExcelWriter(archivo, engine='openpyxl', mode='w') as writer:
+    df_filtrado.to_excel(writer, sheet_name=hoja, index=False)
 
-# Paso 2: Copiar y pegar los valores de las celdas L, M, N y O (quitar fórmulas)
-for fila in range(2, hoja.max_row + 1):
-    valor_celda_l = hoja[f'L{fila}'].value
-    valor_celda_m = hoja[f'M{fila}'].value
-    valor_celda_n = hoja[f'N{fila}'].value
-    valor_celda_o = hoja[f'O{fila}'].value
-
-    # Reabrir el archivo sin data_only para pegar los valores
-    wb_original = openpyxl.load_workbook(archivo)
-    hoja_original = wb_original.active
-
-    hoja_original[f'L{fila}'] = valor_celda_l
-    hoja_original[f'M{fila}'] = valor_celda_m
-    hoja_original[f'N{fila}'] = valor_celda_n
-    hoja_original[f'O{fila}'] = valor_celda_o
-
-# Guardar el archivo con los valores copiados
-wb_original.save(archivo)
-
-# Paso 3: Aplicar filtro en la columna K (columna 11)
-wb_original = openpyxl.load_workbook(archivo)
-hoja_original = wb_original.active
-
-hoja_original.auto_filter.ref = hoja_original.dimensions
-hoja_original.auto_filter.add_filter_column(10, ["TRUE"])  # Columna K es la 11, en Python es índice 10
-
-# Guardar el archivo final con el filtro aplicado
-wb_original.save(archivo)
+print("Proceso completado. Archivo guardado.")
