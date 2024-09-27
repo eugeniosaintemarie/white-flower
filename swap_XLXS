@@ -1,0 +1,5 @@
+=IF(YEAR(I2)=2023, 
+    IF(DATE(YEAR(TODAY())+1, MONTH(I2), DAY(I2))<TODAY(), 
+        DATE(2025, MONTH(I2), DAY(I2)), 
+        DATE(2024, MONTH(I2), DAY(I2))),
+    I2)
