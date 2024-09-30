@@ -1,36 +1,25 @@
-import shutil
-import os
-import zipfile
+import re
 
-def replicar_pdf(archivo_original, num_replicas):
-    # Obtén el nombre base del archivo original sin la extensión
-    nombre_base, extension = os.path.splitext(archivo_original)
+def extraer_cuil(file_path, output_file):
+    # Expresión regular para el formato CUIL
+    cuil_pattern = re.compile(r'\d{2}-\d{8}-\d{1}')
     
-    # Verifica que el archivo original exista
-    if not os.path.isfile(archivo_original):
-        print(f"El archivo {archivo_original} no existe.")
-        return
-    
-    # Lista para almacenar los nombres de las réplicas
-    replicas = []
-    
-    # Crea las réplicas del archivo
-    for i in range(1, num_replicas + 1):
-        nuevo_nombre = f"{nombre_base}_{i}{extension}"
-        shutil.copy(archivo_original, nuevo_nombre)
-        replicas.append(nuevo_nombre)  # Agrega el nombre de la réplica a la lista
-        print(f"Archivo creado: {nuevo_nombre}")
-    
-    # Comprime las réplicas en un archivo ZIP
-    with zipfile.ZipFile("adjunto.zip", "w") as archivo_zip:
-        for replica in replicas:
-            archivo_zip.write(replica)
-            print(f"Archivo {replica} añadido al ZIP adjunto.zip")
-    
-    print("Proceso completado. Todos los archivos han sido comprimidos en adjunto.zip.")
+    with open(file_path, 'r') as file, open(output_file, 'w') as out_file:
+        for line in file:
+            # Verificar si la línea comienza con "0000000001;001;"
+            if line.startswith("0000000001;001;"):
+                # Extraer desde la posición 17 en adelante
+                cuil_candidate = line[16:].strip()
+                
+                # Buscar el CUIL en el candidato
+                cuil_match = cuil_pattern.search(cuil_candidate)
+                if cuil_match:
+                    cuil = cuil_match.group()
+                    print(f"CUIL encontrado: {cuil}")
+                    # Guardar el CUIL en el archivo de salida
+                    out_file.write(cuil + '\n')
 
-if __name__ == "__main__":
-    archivo_pdf = input("Ingresa el nombre del archivo PDF (incluyendo la extensión .pdf): ")
-    cantidad_replicas = int(input("Ingresa la cantidad de réplicas que deseas crear: "))
-    
-    replicar_pdf(archivo_pdf, cantidad_replicas)
+# Ruta al archivo TXT de entrada y de salida
+file_path = 'ruta/al/archivo.txt'
+output_file = 'ruta/al/salida_cuil.txt'
+extraer_cuil(file_path, output_file)
