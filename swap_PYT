@@ -1,39 +1,35 @@
 import os
-import re
-import pdfplumber
+import base64
 
-def extraer_texto_pdf(pdf_path):
-    """Extrae el texto de un archivo PDF usando pdfplumber"""
-    texto = ""
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            texto += page.extract_text()
-    return texto
+def convertir_a_base64(texto):
+    """Convierte una cadena de texto a Base64"""
+    return base64.b64encode(texto.encode('utf-8')).decode('utf-8')
 
-def normalizar_cuil(cuil):
-    """Quita cualquier espacio o carácter extraño del CUIL"""
-    return re.sub(r'\s+', '', cuil)  # Elimina espacios en blanco
+def leer_pdf_base64(pdf_path):
+    """Lee el PDF y lo codifica en Base64"""
+    with open(pdf_path, "rb") as pdf_file:
+        contenido_pdf = pdf_file.read()
+        contenido_base64 = base64.b64encode(contenido_pdf).decode('utf-8')
+    return contenido_base64
 
-def renombrar_pdfs_por_cuil(cuil_file, pdf_folder):
-    # Leer el archivo de CUILs
+def renombrar_pdfs_por_cuil_base64(cuil_file, pdf_folder):
+    # Leer el archivo de CUILs y convertir cada CUIL a Base64
     with open(cuil_file, 'r') as file:
         cuils = [line.strip() for line in file.readlines()]
     
-    # Normalizar los CUILs (remover espacios y asegurar formato correcto)
-    cuils_normalizados = [normalizar_cuil(cuil) for cuil in cuils]
+    cuils_base64 = {cuil: convertir_a_base64(cuil) for cuil in cuils}
     
     # Recorrer todos los archivos PDF en la carpeta
     for filename in os.listdir(pdf_folder):
         if filename.endswith('.pdf'):
             pdf_path = os.path.join(pdf_folder, filename)
             
-            # Extraer el texto del PDF
-            texto_pdf = extraer_texto_pdf(pdf_path)
-            texto_normalizado = normalizar_cuil(texto_pdf)  # Eliminar espacios en el texto extraído
+            # Codificar el PDF en Base64
+            pdf_base64 = leer_pdf_base64(pdf_path)
             
-            # Buscar si alguno de los CUILs está en el texto del PDF
-            for cuil in cuils_normalizados:
-                if cuil in texto_normalizado:
+            # Buscar si alguno de los CUILs en Base64 está en el PDF codificado
+            for cuil, cuil_b64 in cuils_base64.items():
+                if cuil_b64 in pdf_base64:
                     # Si se encuentra el CUIL, renombrar el archivo PDF
                     nuevo_nombre = f"{cuil}.pdf"
                     nuevo_path = os.path.join(pdf_folder, nuevo_nombre)
@@ -45,4 +41,4 @@ def renombrar_pdfs_por_cuil(cuil_file, pdf_folder):
 cuil_file = 'ruta/al/salida_cuil.txt'
 pdf_folder = 'ruta/a/la/carpeta/de/pdfs'
 
-renombrar_pdfs_por_cuil(cuil_file, pdf_folder)
+renombrar_pdfs_por_cuil_base64(cuil_file, pdf_folder)
