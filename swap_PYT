@@ -1,49 +1,26 @@
-import re
-
-def extraer_cuil(file_path, output_file):
-    # Expresión regular para el formato CUIL
-    cuil_pattern = re.compile(r'\d{2}-\d{8}-\d{1}')
-    
-    with open(file_path, 'r') as file, open(output_file, 'w') as out_file:
-        for line in file:
-            # Verificar si la línea comienza con "0000000001;001;"
-            if line.startswith("0000000001;001;"):
-                # Extraer desde la posición 17 en adelante
-                cuil_candidate = line[16:].strip()
-                
-                # Buscar el CUIL en el candidato
-                cuil_match = cuil_pattern.search(cuil_candidate)
-                if cuil_match:
-                    cuil = cuil_match.group()
-                    print(f"CUIL encontrado: {cuil}")
-                    # Guardar el CUIL en el archivo de salida
-                    out_file.write(cuil + '\n')
-
-# Ruta al archivo TXT de entrada y de salida
-file_path = 'ruta/al/archivo.txt'
-output_file = 'ruta/al/salida_cuil.txt'
-extraer_cuil(file_path, output_file)
-
-
-
-
-
 import os
 import re
-from PyPDF2 import PdfReader
+import pdfplumber
 
 def extraer_texto_pdf(pdf_path):
-    """Extrae el texto de un archivo PDF"""
-    reader = PdfReader(pdf_path)
+    """Extrae el texto de un archivo PDF usando pdfplumber"""
     texto = ""
-    for page in reader.pages:
-        texto += page.extract_text()
+    with pdfplumber.open(pdf_path) as pdf:
+        for page in pdf.pages:
+            texto += page.extract_text()
     return texto
+
+def normalizar_cuil(cuil):
+    """Quita cualquier espacio o carácter extraño del CUIL"""
+    return re.sub(r'\s+', '', cuil)  # Elimina espacios en blanco
 
 def renombrar_pdfs_por_cuil(cuil_file, pdf_folder):
     # Leer el archivo de CUILs
     with open(cuil_file, 'r') as file:
         cuils = [line.strip() for line in file.readlines()]
+    
+    # Normalizar los CUILs (remover espacios y asegurar formato correcto)
+    cuils_normalizados = [normalizar_cuil(cuil) for cuil in cuils]
     
     # Recorrer todos los archivos PDF en la carpeta
     for filename in os.listdir(pdf_folder):
@@ -52,10 +29,11 @@ def renombrar_pdfs_por_cuil(cuil_file, pdf_folder):
             
             # Extraer el texto del PDF
             texto_pdf = extraer_texto_pdf(pdf_path)
+            texto_normalizado = normalizar_cuil(texto_pdf)  # Eliminar espacios en el texto extraído
             
             # Buscar si alguno de los CUILs está en el texto del PDF
-            for cuil in cuils:
-                if cuil in texto_pdf:
+            for cuil in cuils_normalizados:
+                if cuil in texto_normalizado:
                     # Si se encuentra el CUIL, renombrar el archivo PDF
                     nuevo_nombre = f"{cuil}.pdf"
                     nuevo_path = os.path.join(pdf_folder, nuevo_nombre)
