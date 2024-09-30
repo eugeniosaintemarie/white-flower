@@ -1,1 +1,27 @@
+def extraer_registros(txt_origen, txt_destino):
+    with open(txt_origen, 'r') as archivo:
+        lineas = archivo.readlines()
 
+    with open(txt_destino, 'w') as salida:
+        # Escribir la cabecera (primera línea)
+        salida.write(lineas[0])
+
+        i = 1  # Empezar desde la segunda línea
+        while i < len(lineas):
+            if lineas[i].startswith('000'):
+                # Escribir la línea que comienza con '000' y las dos siguientes
+                salida.write(lineas[i])
+                if i + 1 < len(lineas):
+                    salida.write(lineas[i + 1])
+                if i + 2 < len(lineas):
+                    salida.write(lineas[i + 2])
+                i += 3  # Avanzar 3 líneas
+            else:
+                i += 1  # Continuar con la siguiente línea
+
+# Rutas de archivo
+txt_origen = 'ruta/al/origen.txt'
+txt_destino = 'ruta/al/destino.txt'
+
+# Llamar a la función
+extraer_registros(txt_origen, txt_destino)
