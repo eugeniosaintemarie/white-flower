@@ -1,44 +1,24 @@
-import os
-import base64
+def extraer_registros(txt_origen, txt_destino):
+    with open(txt_origen, 'r') as archivo:
+        lineas = archivo.readlines()
 
-def convertir_a_base64(texto):
-    """Convierte una cadena de texto a Base64"""
-    return base64.b64encode(texto.encode('utf-8')).decode('utf-8')
+    with open(txt_destino, 'w') as salida:
+        i = 0
+        while i < len(lineas):
+            if lineas[i].startswith('000'):
+                # Escribir la línea que comienza con '000' y las dos siguientes
+                salida.write(lineas[i])
+                if i + 1 < len(lineas):
+                    salida.write(lineas[i + 1])
+                if i + 2 < len(lineas):
+                    salida.write(lineas[i + 2])
+                i += 3  # Avanzar 3 líneas
+            else:
+                i += 1  # Continuar con la siguiente línea
 
-def leer_pdf_base64(pdf_path):
-    """Lee el PDF y lo codifica en Base64"""
-    with open(pdf_path, "rb") as pdf_file:
-        contenido_pdf = pdf_file.read()
-        contenido_base64 = base64.b64encode(contenido_pdf).decode('utf-8')
-    return contenido_base64
+# Rutas de archivo
+txt_origen = 'ruta/al/origen.txt'
+txt_destino = 'ruta/al/destino.txt'
 
-def renombrar_pdfs_por_cuil_base64(cuil_file, pdf_folder):
-    # Leer el archivo de CUILs y convertir cada CUIL a Base64
-    with open(cuil_file, 'r') as file:
-        cuils = [line.strip() for line in file.readlines()]
-    
-    cuils_base64 = {cuil: convertir_a_base64(cuil) for cuil in cuils}
-    
-    # Recorrer todos los archivos PDF en la carpeta
-    for filename in os.listdir(pdf_folder):
-        if filename.endswith('.pdf'):
-            pdf_path = os.path.join(pdf_folder, filename)
-            
-            # Codificar el PDF en Base64
-            pdf_base64 = leer_pdf_base64(pdf_path)
-            
-            # Buscar si alguno de los CUILs en Base64 está en el PDF codificado
-            for cuil, cuil_b64 in cuils_base64.items():
-                if cuil_b64 in pdf_base64:
-                    # Si se encuentra el CUIL, renombrar el archivo PDF
-                    nuevo_nombre = f"{cuil}.pdf"
-                    nuevo_path = os.path.join(pdf_folder, nuevo_nombre)
-                    os.rename(pdf_path, nuevo_path)
-                    print(f"Archivo {filename} renombrado a {nuevo_nombre}")
-                    break
-
-# Rutas de archivo y carpeta
-cuil_file = 'ruta/al/salida_cuil.txt'
-pdf_folder = 'ruta/a/la/carpeta/de/pdfs'
-
-renombrar_pdfs_por_cuil_base64(cuil_file, pdf_folder)
+# Llamar a la función
+extraer_registros(txt_origen, txt_destino)
