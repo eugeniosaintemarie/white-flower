@@ -23,3 +23,48 @@ def extraer_cuil(file_path, output_file):
 file_path = 'ruta/al/archivo.txt'
 output_file = 'ruta/al/salida_cuil.txt'
 extraer_cuil(file_path, output_file)
+
+
+
+
+
+import os
+import re
+from PyPDF2 import PdfReader
+
+def extraer_texto_pdf(pdf_path):
+    """Extrae el texto de un archivo PDF"""
+    reader = PdfReader(pdf_path)
+    texto = ""
+    for page in reader.pages:
+        texto += page.extract_text()
+    return texto
+
+def renombrar_pdfs_por_cuil(cuil_file, pdf_folder):
+    # Leer el archivo de CUILs
+    with open(cuil_file, 'r') as file:
+        cuils = [line.strip() for line in file.readlines()]
+    
+    # Recorrer todos los archivos PDF en la carpeta
+    for filename in os.listdir(pdf_folder):
+        if filename.endswith('.pdf'):
+            pdf_path = os.path.join(pdf_folder, filename)
+            
+            # Extraer el texto del PDF
+            texto_pdf = extraer_texto_pdf(pdf_path)
+            
+            # Buscar si alguno de los CUILs está en el texto del PDF
+            for cuil in cuils:
+                if cuil in texto_pdf:
+                    # Si se encuentra el CUIL, renombrar el archivo PDF
+                    nuevo_nombre = f"{cuil}.pdf"
+                    nuevo_path = os.path.join(pdf_folder, nuevo_nombre)
+                    os.rename(pdf_path, nuevo_path)
+                    print(f"Archivo {filename} renombrado a {nuevo_nombre}")
+                    break
+
+# Rutas de archivo y carpeta
+cuil_file = 'ruta/al/salida_cuil.txt'
+pdf_folder = 'ruta/a/la/carpeta/de/pdfs'
+
+renombrar_pdfs_por_cuil(cuil_file, pdf_folder)
