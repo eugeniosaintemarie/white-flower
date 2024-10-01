@@ -3,7 +3,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from io import BytesIO
 
-def superponer_grilla_sobre_pdf(pdf_existente, pdf_salida, desplazamiento_y=50):
+def superponer_grilla_sobre_pdf(pdf_existente, pdf_salida, desplazamiento_superior=50, desplazamiento_inferior=-50):
     # Abrir el PDF existente
     pdf_reader = PyPDF2.PdfReader(open(pdf_existente, "rb"))
     num_pages = len(pdf_reader.pages)
@@ -19,11 +19,12 @@ def superponer_grilla_sobre_pdf(pdf_existente, pdf_salida, desplazamiento_y=50):
         
         step = 20  # Ajusta el paso para la cuadrícula (cada 20 puntos)
         
-        # Ajustar la cuadrícula, dejando un espacio superior para la cabecera
+        # Ajustar la cuadrícula para que empiece más arriba o más abajo
         for x in range(0, int(width), step):
             temp_canvas.drawString(x, height - 10, str(x))  # Coordenadas X
-            temp_canvas.line(x, desplazamiento_y, x, height)
-        for y in range(desplazamiento_y, int(height), step):
+            temp_canvas.line(x, desplazamiento_inferior, x, height - desplazamiento_superior)
+        
+        for y in range(desplazamiento_inferior, int(height) - desplazamiento_superior, step):
             temp_canvas.drawString(5, y, str(y))  # Coordenadas Y
             temp_canvas.line(0, y, width, y)
         
@@ -49,7 +50,7 @@ def superponer_grilla_sobre_pdf(pdf_existente, pdf_salida, desplazamiento_y=50):
 
 # Ejecutar la función con el PDF original y el nuevo PDF de salida
 pdf_existente = 'tu_pdf_modelo.pdf'
-pdf_salida = 'pdf_con_grilla_modificada.pdf'
+pdf_salida = 'pdf_con_grilla_completa.pdf'
 
-# Usamos desplazamiento_y para mover la cuadrícula hacia abajo (ej. 50 puntos)
-superponer_grilla_sobre_pdf(pdf_existente, pdf_salida, desplazamiento_y=50)
+# Usamos desplazamiento_superior y desplazamiento_inferior para ajustar toda la grilla
+superponer_grilla_sobre_pdf(pdf_existente, pdf_salida, desplazamiento_superior=30, desplazamiento_inferior=-50)
