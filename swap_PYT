@@ -1,27 +1,110 @@
-def extraer_registros(txt_origen, txt_destino):
-    with open(txt_origen, 'r') as archivo:
-        lineas = archivo.readlines()
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
-    with open(txt_destino, 'w') as salida:
-        # Escribir la cabecera (primera línea)
-        salida.write(lineas[0])
+# Función para leer el archivo TXT y mapear los campos
+def leer_informacion_clientes(archivo_txt):
+    clientes = []
+    with open(archivo_txt, 'r') as file:
+        lines = file.readlines()
+        for i in range(0, len(lines), 3):
+            cliente = {}
+            datos_linea_1 = lines[i].strip().split(';')
+            datos_linea_2 = lines[i+1].strip().split(';')
+            datos_linea_3 = lines[i+2].strip().split(';')
+            
+            # Asignar campos (puedes ajustar esto según tu estructura)
+            cliente['CUIL'] = datos_linea_1[0]
+            cliente['Nombre'] = datos_linea_1[1]
+            cliente['Apellido'] = datos_linea_1[2]
+            cliente['Direccion'] = datos_linea_2[0]
+            cliente['Ciudad'] = datos_linea_2[1]
+            cliente['Email'] = datos_linea_3[0]
+            cliente['Telefono'] = datos_linea_3[1]
+            
+            clientes.append(cliente)
+    return clientes
 
-        i = 1  # Empezar desde la segunda línea
-        while i < len(lineas):
-            if lineas[i].startswith('000'):
-                # Escribir la línea que comienza con '000' y las dos siguientes
-                salida.write(lineas[i])
-                if i + 1 < len(lineas):
-                    salida.write(lineas[i + 1])
-                if i + 2 < len(lineas):
-                    salida.write(lineas[i + 2])
-                i += 3  # Avanzar 3 líneas
-            else:
-                i += 1  # Continuar con la siguiente línea
+# Función para generar un PDF con la información de un cliente
+def generar_pdf(cliente, numero_cliente):
+    nombre_pdf = f"cliente_{numero_cliente}.pdf"
+    c = canvas.Canvas(nombre_pdf, pagesize=A4)
+    
+    # Escribir la información en el PDF
+    c.drawString(100, 800, f"Cliente {numero_cliente}")
+    c.drawString(100, 780, f"CUIL: {cliente['CUIL']}")
+    c.drawString(100, 760, f"Nombre: {cliente['Nombre']}")
+    c.drawString(100, 740, f"Apellido: {cliente['Apellido']}")
+    c.drawString(100, 720, f"Dirección: {cliente['Direccion']}")
+    c.drawString(100, 700, f"Ciudad: {cliente['Ciudad']}")
+    c.drawString(100, 680, f"Email: {cliente['Email']}")
+    c.drawString(100, 660, f"Teléfono: {cliente['Telefono']}")
+    
+    # Guardar el PDF
+    c.save()
 
-# Rutas de archivo
-txt_origen = 'ruta/al/origen.txt'
-txt_destino = 'ruta/al/destino.txt'
+# Función principal para procesar todos los clientes y generar sus PDFs
+def procesar_y_generar_pdfs(archivo_txt):
+    clientes = leer_informacion_clientes(archivo_txt)
+    
+    for i, cliente in enumerate(clientes):
+        generar_pdf(cliente, i + 1)
 
-# Llamar a la función
-extraer_registros(txt_origen, txt_destino)
+# Ejecutar el proceso con tu archivo TXT
+archivo_txt = 'clientes.txt'
+procesar_y_generar_pdfs(archivo_txt)
+
+
+
+
+
+
+
+
+
+
+import PyPDF2
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen.canvas import Canvas
+from reportlab.lib.units import inch
+
+# Función para superponer la cuadrícula sobre un PDF existente
+def superponer_grilla_sobre_pdf(pdf_existente, pdf_salida):
+    # Abrir el PDF existente
+    pdf_reader = PyPDF2.PdfReader(open(pdf_existente, "rb"))
+    num_pages = len(pdf_reader.pages)
+    
+    # Crear un PDF de salida
+    output_canvas = canvas.Canvas(pdf_salida, pagesize=A4)
+    width, height = A4
+
+    # Iterar sobre cada página del PDF existente
+    for page_num in range(num_pages):
+        # Extraer la página
+        output_canvas.showPage()  # Crear una nueva página en el PDF de salida
+
+        # Superponer el contenido de la página del PDF existente
+        packet = output_canvas._code
+        packet.drawImage(pdf_existente, 0, 0, width, height)
+
+        # Dibujar la cuadrícula
+        step = 20  # Ajustar el tamaño del paso (distancia entre líneas)
+        
+        # Coordenadas X
+        for x in range(0, int(width), step):
+            output_canvas.drawString(x, height - 10, str(x))
+            output_canvas.line(x, 0, x, height)
+        
+        # Coordenadas Y
+        for y in range(0, int(height), step):
+            output_canvas.drawString(5, y, str(y))
+            output_canvas.line(0, y, width, y)
+
+    # Guardar el nuevo PDF con la cuadrícula superpuesta
+    output_canvas.save()
+
+# Ejecutar la función con tu PDF modelo y el nuevo PDF de salida
+pdf_existente = 'tu_pdf_modelo.pdf'  # El PDF sobre el que quieres superponer la cuadrícula
+pdf_salida = 'pdf_con_grilla.pdf'    # El nuevo PDF con la cuadrícula
+
+superponer_grilla_sobre_pdf(pdf_existente, pdf_salida)
