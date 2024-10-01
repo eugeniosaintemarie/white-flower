@@ -1,46 +1,55 @@
 import PyPDF2
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen.canvas import Canvas
-from reportlab.lib.units import inch
+from io import BytesIO
 
-# Función para superponer la cuadrícula sobre un PDF existente
 def superponer_grilla_sobre_pdf(pdf_existente, pdf_salida):
     # Abrir el PDF existente
     pdf_reader = PyPDF2.PdfReader(open(pdf_existente, "rb"))
     num_pages = len(pdf_reader.pages)
     
-    # Crear un PDF de salida
-    output_canvas = canvas.Canvas(pdf_salida, pagesize=A4)
-    width, height = A4
-
-    # Iterar sobre cada página del PDF existente
+    # Crear un PDF writer para el resultado final
+    pdf_writer = PyPDF2.PdfWriter()
+    
     for page_num in range(num_pages):
-        # Extraer la página
-        output_canvas.showPage()  # Crear una nueva página en el PDF de salida
-
-        # Superponer el contenido de la página del PDF existente
-        packet = output_canvas._code
-        packet.drawImage(pdf_existente, 0, 0, width, height)
-
-        # Dibujar la cuadrícula
-        step = 20  # Ajustar el tamaño del paso (distancia entre líneas)
+        # Crear un buffer temporal para almacenar el PDF con la cuadrícula
+        packet = BytesIO()
+        temp_canvas = canvas.Canvas(packet, pagesize=A4)
+        width, height = A4
         
-        # Coordenadas X
+        # Dibujar la cuadrícula en el buffer temporal
+        step = 20  # Ajusta el paso para la cuadrícula (cada 20 puntos)
+        
+        # Dibujar líneas horizontales y verticales con coordenadas
         for x in range(0, int(width), step):
-            output_canvas.drawString(x, height - 10, str(x))
-            output_canvas.line(x, 0, x, height)
-        
-        # Coordenadas Y
+            temp_canvas.drawString(x, height - 10, str(x))
+            temp_canvas.line(x, 0, x, height)
         for y in range(0, int(height), step):
-            output_canvas.drawString(5, y, str(y))
-            output_canvas.line(0, y, width, y)
+            temp_canvas.drawString(5, y, str(y))
+            temp_canvas.line(0, y, width, y)
+        
+        # Guardar la página de cuadrícula en el buffer temporal
+        temp_canvas.save()
 
+        # Obtener la página de cuadrícula desde el buffer temporal
+        packet.seek(0)
+        new_pdf = PyPDF2.PdfReader(packet)
+
+        # Extraer la página del PDF existente
+        original_page = pdf_reader.pages[page_num]
+
+        # Combinar la página original con la nueva página de cuadrícula
+        original_page.merge_page(new_pdf.pages[0])
+
+        # Agregar la página combinada al escritor del nuevo PDF
+        pdf_writer.add_page(original_page)
+    
     # Guardar el nuevo PDF con la cuadrícula superpuesta
-    output_canvas.save()
+    with open(pdf_salida, "wb") as output_file:
+        pdf_writer.write(output_file)
 
 # Ejecutar la función con tu PDF modelo y el nuevo PDF de salida
-pdf_existente = 'tu_pdf_modelo.pdf'  # El PDF sobre el que quieres superponer la cuadrícula
+pdf_existente = 'tu_pdf_modelo.pdf'  # PDF original sobre el que quieres superponer la cuadrícula
 pdf_salida = 'pdf_con_grilla.pdf'    # El nuevo PDF con la cuadrícula
 
 superponer_grilla_sobre_pdf(pdf_existente, pdf_salida)
