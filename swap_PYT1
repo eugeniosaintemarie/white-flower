@@ -1,5 +1,7 @@
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
+from reportlab.graphics.barcode import code128
+from reportlab.lib.units import mm
 
 # Mapeo de los campos: Especifica qué índice corresponde a cada campo
 mapeo_campos = {
@@ -35,20 +37,26 @@ def leer_informacion_clientes(archivo_txt, mapeo_campos):
             clientes.append(cliente)
     return clientes
 
-# Función para generar un PDF con la información de un cliente
-def generar_pdf(cliente, numero_cliente):
-    nombre_pdf = f"cliente_{numero_cliente}.pdf"
+# Función para generar un PDF con la información de un cliente y agregar el código de barras
+def generar_pdf(cliente):
+    nombre_pdf = f"{cliente['CUIL']}.pdf"
     c = canvas.Canvas(nombre_pdf, pagesize=A4)
     
     # Escribir la información en el PDF
-    c.drawString(100, 800, f"Cliente {numero_cliente}")
-    c.drawString(100, 780, f"CUIL: {cliente['CUIL']}")
-    c.drawString(100, 760, f"Nombre: {cliente['Nombre']}")
-    c.drawString(100, 740, f"Apellido: {cliente['Apellido']}")
-    c.drawString(100, 720, f"Dirección: {cliente['Direccion']}")
-    c.drawString(100, 700, f"Ciudad: {cliente['Ciudad']}")
-    c.drawString(100, 680, f"Email: {cliente['Email']}")
-    c.drawString(100, 660, f"Teléfono: {cliente['Telefono']}")
+    c.drawString(100, 800, f"CUIL: {cliente['CUIL']}")
+    c.drawString(100, 780, f"Nombre: {cliente['Nombre']}")
+    c.drawString(100, 760, f"Apellido: {cliente['Apellido']}")
+    c.drawString(100, 740, f"Dirección: {cliente['Direccion']}")
+    c.drawString(100, 720, f"Ciudad: {cliente['Ciudad']}")
+    c.drawString(100, 700, f"Email: {cliente['Email']}")
+    c.drawString(100, 680, f"Teléfono: {cliente['Telefono']}")
+    
+    # Generar el código de barras basado en el número de CUIL
+    barcode_value = cliente['CUIL']  # Puedes cambiar esto para otro número si es necesario
+    barcode = code128.Code128(barcode_value, barHeight=20*mm, barWidth=0.5*mm)
+    
+    # Ubicar el código de barras en el PDF
+    barcode.drawOn(c, 100, 600)  # Coordenadas (x, y) para el código de barras
     
     # Guardar el PDF
     c.save()
@@ -57,8 +65,8 @@ def generar_pdf(cliente, numero_cliente):
 def procesar_y_generar_pdfs(archivo_txt, mapeo_campos):
     clientes = leer_informacion_clientes(archivo_txt, mapeo_campos)
     
-    for i, cliente in enumerate(clientes):
-        generar_pdf(cliente, i + 1)
+    for cliente in clientes:
+        generar_pdf(cliente)
 
 # Ejecutar el proceso con tu archivo TXT
 archivo_txt = 'clientes.txt'
