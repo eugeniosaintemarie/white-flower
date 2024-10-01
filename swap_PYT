@@ -1,8 +1,19 @@
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-# Función para leer el archivo TXT y mapear los campos
-def leer_informacion_clientes(archivo_txt):
+# Mapeo de los campos: Especifica qué índice corresponde a cada campo
+mapeo_campos = {
+    'CUIL': 0,            # Primer valor antes del primer punto y coma
+    'Nombre': 1,          # Segundo valor entre el primer y segundo punto y coma
+    'Apellido': 2,        # Tercer valor, y así sucesivamente
+    'Direccion': 0,       # En la segunda línea
+    'Ciudad': 1,
+    'Email': 0,           # En la tercera línea
+    'Telefono': 1
+}
+
+# Función para leer el archivo TXT y mapear los campos dinámicamente
+def leer_informacion_clientes(archivo_txt, mapeo_campos):
     clientes = []
     with open(archivo_txt, 'r') as file:
         lines = file.readlines()
@@ -12,14 +23,14 @@ def leer_informacion_clientes(archivo_txt):
             datos_linea_2 = lines[i+1].strip().split(';')
             datos_linea_3 = lines[i+2].strip().split(';')
             
-            # Asignar campos (puedes ajustar esto según tu estructura)
-            cliente['CUIL'] = datos_linea_1[0]
-            cliente['Nombre'] = datos_linea_1[1]
-            cliente['Apellido'] = datos_linea_1[2]
-            cliente['Direccion'] = datos_linea_2[0]
-            cliente['Ciudad'] = datos_linea_2[1]
-            cliente['Email'] = datos_linea_3[0]
-            cliente['Telefono'] = datos_linea_3[1]
+            # Asignar campos basados en el mapeo
+            cliente['CUIL'] = datos_linea_1[mapeo_campos['CUIL']]
+            cliente['Nombre'] = datos_linea_1[mapeo_campos['Nombre']]
+            cliente['Apellido'] = datos_linea_1[mapeo_campos['Apellido']]
+            cliente['Direccion'] = datos_linea_2[mapeo_campos['Direccion']]
+            cliente['Ciudad'] = datos_linea_2[mapeo_campos['Ciudad']]
+            cliente['Email'] = datos_linea_3[mapeo_campos['Email']]
+            cliente['Telefono'] = datos_linea_3[mapeo_campos['Telefono']]
             
             clientes.append(cliente)
     return clientes
@@ -43,27 +54,17 @@ def generar_pdf(cliente, numero_cliente):
     c.save()
 
 # Función principal para procesar todos los clientes y generar sus PDFs
-def procesar_y_generar_pdfs(archivo_txt):
-    clientes = leer_informacion_clientes(archivo_txt)
+def procesar_y_generar_pdfs(archivo_txt, mapeo_campos):
+    clientes = leer_informacion_clientes(archivo_txt, mapeo_campos)
     
     for i, cliente in enumerate(clientes):
         generar_pdf(cliente, i + 1)
 
 # Ejecutar el proceso con tu archivo TXT
 archivo_txt = 'clientes.txt'
-procesar_y_generar_pdfs(archivo_txt)
+procesar_y_generar_pdfs(archivo_txt, mapeo_campos)
 
-
-
-
-
-
-
-
-
-
-import PyPDF2
-from reportlab.pdfgen import canvas
+from pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.units import inch
