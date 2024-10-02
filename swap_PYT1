@@ -2,6 +2,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.graphics.barcode import code128
 from reportlab.lib.units import mm
+from PyPDF2 import PdfReader, PdfWriter
+from io import BytesIO
 
 # Mapeo de los campos: Especifica qué índice corresponde a cada campo
 mapeo_campos = {
@@ -37,12 +39,13 @@ def leer_informacion_clientes(archivo_txt, mapeo_campos):
             clientes.append(cliente)
     return clientes
 
-# Función para generar un PDF con la información de un cliente y agregar el código de barras
-def generar_pdf(cliente):
-    nombre_pdf = f"{cliente['CUIL']}.pdf"
-    c = canvas.Canvas(nombre_pdf, pagesize=A4)
+# Función para volcar la información en un PDF modelo
+def generar_pdf_sobre_modelo(cliente, pdf_modelo):
+    # Crear un objeto de escritura para PDF en memoria
+    packet = BytesIO()
+    c = canvas.Canvas(packet, pagesize=A4)
     
-    # Escribir la información en el PDF
+    # Escribir la información en las coordenadas adecuadas sobre el PDF modelo
     c.drawString(100, 800, f"CUIL: {cliente['CUIL']}")
     c.drawString(100, 780, f"Nombre: {cliente['Nombre']}")
     c.drawString(100, 760, f"Apellido: {cliente['Apellido']}")
@@ -52,22 +55,43 @@ def generar_pdf(cliente):
     c.drawString(100, 680, f"Teléfono: {cliente['Telefono']}")
     
     # Generar el código de barras basado en el número de CUIL
-    barcode_value = cliente['CUIL']  # Puedes cambiar esto para otro número si es necesario
+    barcode_value = cliente['CUIL']
     barcode = code128.Code128(barcode_value, barHeight=20*mm, barWidth=0.5*mm)
+    barcode.drawOn(c, 100, 600)  # Ubicación del código de barras
     
-    # Ubicar el código de barras en el PDF
-    barcode.drawOn(c, 100, 600)  # Coordenadas (x, y) para el código de barras
-    
-    # Guardar el PDF
     c.save()
+    
+    # Mover el puntero al principio de la memoria
+    packet.seek(0)
+    
+    # Leer el PDF modelo
+    reader = PdfReader(pdf_modelo)
+    writer = PdfWriter()
+    
+    # Leer el contenido generado en ReportLab
+    overlay_pdf = PdfReader(packet)
+    overlay_page = overlay_pdf.pages[0]
+    
+    # Agregar el contenido sobre el PDF modelo
+    modelo_page = reader.pages[0]
+    modelo_page.merge_page(overlay_page)
+    
+    # Agregar la página modificada al escritor
+    writer.add_page(modelo_page)
+    
+    # Guardar el PDF final con el nombre del CUIL
+    nombre_pdf = f"{cliente['CUIL']}.pdf"
+    with open(nombre_pdf, 'wb') as output_pdf:
+        writer.write(output_pdf)
 
 # Función principal para procesar todos los clientes y generar sus PDFs
-def procesar_y_generar_pdfs(archivo_txt, mapeo_campos):
+def procesar_y_generar_pdfs(archivo_txt, mapeo_campos, pdf_modelo):
     clientes = leer_informacion_clientes(archivo_txt, mapeo_campos)
     
     for cliente in clientes:
-        generar_pdf(cliente)
+        generar_pdf_sobre_modelo(cliente, pdf_modelo)
 
-# Ejecutar el proceso con tu archivo TXT
+# Ejecutar el proceso con tu archivo TXT y el PDF modelo
 archivo_txt = 'clientes.txt'
-procesar_y_generar_pdfs(archivo_txt, mapeo_campos)
+pdf_modelo = 'modelo.pdf'
+procesar_y_generar_pdfs(archivo_txt, mapeo_campos, pdf_modelo)
