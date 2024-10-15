@@ -1,0 +1,19 @@
+Sub OptimizedMacro()
+    ' Deshabilitar actualizaciones de pantalla, cálculo automático y eventos
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    Application.EnableEvents = False
+
+    ' Código de tu macro
+    Dim i As Long
+    For i = 1 To 100000
+        ' Simulación de un proceso largo
+        Cells(i, 1).Value = i
+        If i Mod 1000 = 0 Then DoEvents  ' Permitir que Excel responda
+    Next i
+
+    ' Restaurar configuraciones
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+    Application.EnableEvents = True
+End Sub
