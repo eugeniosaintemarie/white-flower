@@ -1,24 +1,28 @@
-Sub EjecutarMacroMinimizada()
-    ' Minimizar la ventana del archivo que ejecuta la macro
-    Application.WindowState = xlMinimized
+#If VBA7 Then
+    ' Para Excel de 64 bits
+    Private Declare PtrSafe Function GetAsyncKeyState Lib "user32" (ByVal vKey As Long) As Integer
+#Else
+    ' Para Excel de 32 bits
+    Private Declare Function GetAsyncKeyState Lib "user32" (ByVal vKey As Long) As Integer
+#End If
 
-    ' Deshabilitar actualizaciones y cálculos automáticos
-    Application.ScreenUpdating = False
-    Application.Calculation = xlCalculationManual
-    Application.EnableEvents = False
-
-    ' Procesar comentarios en la columna A
+Sub LoopConSalida()
     Dim i As Long
-    For i = 1 To 1000
-        Cells(i, 1).AddComment "Comentario " & i
-        If i Mod 10 = 0 Then DoEvents  ' Permitir que Excel procese otras acciones
+    
+    ' Iniciar el loop
+    For i = 1 To 100000
+        ' Realiza alguna operación
+        Cells(i, 1).Value = i
+        
+        ' Permite que Excel procese eventos
+        DoEvents
+        
+        ' Detectar si se ha presionado la tecla 'Esc' (código ASCII: 27)
+        If GetAsyncKeyState(27) <> 0 Then
+            MsgBox "Loop cancelado por el usuario.", vbExclamation
+            Exit For  ' Salir del bucle
+        End If
     Next i
-
-    ' Restaurar configuraciones
-    Application.ScreenUpdating = True
-    Application.Calculation = xlCalculationAutomatic
-    Application.EnableEvents = True
-
-    ' Restaurar la ventana del archivo
-    Application.WindowState = xlMaximized
+    
+    MsgBox "Proceso terminado.", vbInformation
 End Sub
