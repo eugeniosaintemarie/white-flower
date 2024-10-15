@@ -1,0 +1,24 @@
+Sub EjecutarMacroMinimizada()
+    ' Minimizar la ventana del archivo que ejecuta la macro
+    Application.WindowState = xlMinimized
+
+    ' Deshabilitar actualizaciones y cálculos automáticos
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    Application.EnableEvents = False
+
+    ' Procesar comentarios en la columna A
+    Dim i As Long
+    For i = 1 To 1000
+        Cells(i, 1).AddComment "Comentario " & i
+        If i Mod 10 = 0 Then DoEvents  ' Permitir que Excel procese otras acciones
+    Next i
+
+    ' Restaurar configuraciones
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+    Application.EnableEvents = True
+
+    ' Restaurar la ventana del archivo
+    Application.WindowState = xlMaximized
+End Sub
