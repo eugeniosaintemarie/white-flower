@@ -1,97 +1,73 @@
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.graphics.barcode import code128
-from reportlab.lib.units import mm
+import os
 from PyPDF2 import PdfReader, PdfWriter
-from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+import io
 
-# Mapeo de los campos: Especifica qué índice corresponde a cada campo
+
 mapeo_campos = {
-    'CUIL': 0,            # Primer valor antes del primer punto y coma
-    'Nombre': 1,          # Segundo valor entre el primer y segundo punto y coma
-    'Apellido': 2,        # Tercer valor, y así sucesivamente
-    'Direccion': 0,       # En la segunda línea
-    'Ciudad': 1,
-    'Email': 0,           # En la tercera línea
-    'Telefono': 1
+    "cuil_afiliado": 2,
 }
 
-# Función para leer el archivo TXT y mapear los campos dinámicamente
-def leer_informacion_clientes(archivo_txt, mapeo_campos):
+
+def leer_informacion_clientes(txt_informacion, mapeo_campos):
     clientes = []
-    with open(archivo_txt, 'r') as file:
-        lines = file.readlines()
-        for i in range(0, len(lines), 3):
-            cliente = {}
-            datos_linea_1 = lines[i].strip().split(';')
-            datos_linea_2 = lines[i+1].strip().split(';')
-            datos_linea_3 = lines[i+2].strip().split(';')
-            
-            # Asignar campos basados en el mapeo
-            cliente['CUIL'] = datos_linea_1[mapeo_campos['CUIL']]
-            cliente['Nombre'] = datos_linea_1[mapeo_campos['Nombre']]
-            cliente['Apellido'] = datos_linea_1[mapeo_campos['Apellido']]
-            cliente['Direccion'] = datos_linea_2[mapeo_campos['Direccion']]
-            cliente['Ciudad'] = datos_linea_2[mapeo_campos['Ciudad']]
-            cliente['Email'] = datos_linea_3[mapeo_campos['Email']]
-            cliente['Telefono'] = datos_linea_3[mapeo_campos['Telefono']]
-            
-            clientes.append(cliente)
+    try:
+        with open(txt_informacion, "r") as file:
+            lines = file.readlines()
+            for i in range(0, len(lines), 3):
+                cliente = {}
+                datos_linea_1 = lines[i].strip().split(";")
+                # datos_linea_2 = lines[i+1].strip().split(';')
+                # datos_linea_3 = lines[i+2].strip().split(';')
+
+                cliente["cuil_afiliado"] = datos_linea_1[mapeo_campos["cuil_afiliado"]]
+
+                clientes.append(cliente)
+    except Exception as e:
+        print(f"Error al leer el archivo TXT: {e}")
     return clientes
 
-# Función para volcar la información en un PDF modelo
-def generar_pdf_sobre_modelo(cliente, pdf_modelo):
-    # Crear un objeto de escritura para PDF en memoria
-    packet = BytesIO()
-    c = canvas.Canvas(packet, pagesize=A4)
-    
-    # Escribir la información en las coordenadas adecuadas sobre el PDF modelo
-    c.drawString(100, 800, f"CUIL: {cliente['CUIL']}")
-    c.drawString(100, 780, f"Nombre: {cliente['Nombre']}")
-    c.drawString(100, 760, f"Apellido: {cliente['Apellido']}")
-    c.drawString(100, 740, f"Dirección: {cliente['Direccion']}")
-    c.drawString(100, 720, f"Ciudad: {cliente['Ciudad']}")
-    c.drawString(100, 700, f"Email: {cliente['Email']}")
-    c.drawString(100, 680, f"Teléfono: {cliente['Telefono']}")
-    
-    # Generar el código de barras basado en el número de CUIL
-    barcode_value = cliente['CUIL']
-    barcode = code128.Code128(barcode_value, barHeight=20*mm, barWidth=0.5*mm)
-    barcode.drawOn(c, 100, 600)  # Ubicación del código de barras
-    
-    c.save()
-    
-    # Mover el puntero al principio de la memoria
-    packet.seek(0)
-    
-    # Leer el PDF modelo
-    reader = PdfReader(pdf_modelo)
-    writer = PdfWriter()
-    
-    # Leer el contenido generado en ReportLab
-    overlay_pdf = PdfReader(packet)
-    overlay_page = overlay_pdf.pages[0]
-    
-    # Agregar el contenido sobre el PDF modelo
-    modelo_page = reader.pages[0]
-    modelo_page.merge_page(overlay_page)
-    
-    # Agregar la página modificada al escritor
-    writer.add_page(modelo_page)
-    
-    # Guardar el PDF final con el nombre del CUIL
-    nombre_pdf = f"{cliente['CUIL']}.pdf"
-    with open(nombre_pdf, 'wb') as output_pdf:
-        writer.write(output_pdf)
 
-# Función principal para procesar todos los clientes y generar sus PDFs
-def procesar_y_generar_pdfs(archivo_txt, mapeo_campos, pdf_modelo):
-    clientes = leer_informacion_clientes(archivo_txt, mapeo_campos)
-    
-    for cliente in clientes:
-        generar_pdf_sobre_modelo(cliente, pdf_modelo)
+def agregar_texto_a_pdf(pdf_modelo, cliente, pdf_final):
+    try:
+        reader = PdfReader(pdf_modelo)
+        writer = PdfWriter()
 
-# Ejecutar el proceso con tu archivo TXT y el PDF modelo
-archivo_txt = 'clientes.txt'
-pdf_modelo = 'modelo.pdf'
-procesar_y_generar_pdfs(archivo_txt, mapeo_campos, pdf_modelo)
+        packet = io.BytesIO()
+        can = canvas.Canvas(packet, pagesize=letter)
+
+        can.drawString(100, 750, f"{cliente['cuil_afiliado']}")
+
+        can.save()
+
+        packet.seek(0)
+        new_pdf = PdfReader(packet)
+
+        page = reader.pages[0]
+        page.merge_page(new_pdf.pages[0])
+        writer.add_page(page)
+
+        with open(pdf_final, "wb") as output_file:
+            writer.write(output_file)
+    except Exception as e:
+        print(
+            f"Error al generar el PDF para el cliente {cliente['cuil_afiliado']}: {e}"
+        )
+
+
+directorio_actual = os.path.dirname(os.path.abspath(__file__))
+pdf_modelo = os.path.join(directorio_actual, "modelo.pdf")
+txt_informacion = os.path.join(directorio_actual, "clientes.txt")
+
+if not os.path.exists(pdf_modelo):
+    raise FileNotFoundError(f"El archivo {pdf_modelo} no existe.")
+if not os.path.exists(txt_informacion):
+    raise FileNotFoundError(f"El archivo {txt_informacion} no existe.")
+
+clientes = leer_informacion_clientes(txt_informacion, mapeo_campos)
+
+
+for cliente in clientes:
+    pdf_final = os.path.join(directorio_actual, f"{cliente['cuil_afiliado']}.pdf")
+    agregar_texto_a_pdf(pdf_modelo, cliente, pdf_final)
