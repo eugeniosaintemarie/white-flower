@@ -1,1 +1,6 @@
+from reportlab.graphics.barcode import code128
+import barcode
+from barcode.writer import ImageWriter
 
+    barcode_obj = code128.Code128(numero_barras, barHeight=20*mm, barWidth=0.8)
+    barcode_obj.drawOn(can, 100, 700)
