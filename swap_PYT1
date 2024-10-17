@@ -3,6 +3,7 @@ from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 import io
+from tqdm import tqdm
 
 
 mapeo_campos = {
@@ -68,6 +69,6 @@ if not os.path.exists(txt_informacion):
 clientes = leer_informacion_clientes(txt_informacion, mapeo_campos)
 
 
-for cliente in clientes:
+for cliente in tqdm(clientes, desc="Generando PDFs"):
     pdf_final = os.path.join(directorio_actual, f"{cliente['cuil_afiliado']}.pdf")
     agregar_texto_a_pdf(pdf_modelo, cliente, pdf_final)
