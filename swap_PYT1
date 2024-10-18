@@ -1,74 +1,38 @@
-import os
-from PyPDF2 import PdfReader, PdfWriter
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-import io
-from tqdm import tqdm
-
-
-mapeo_campos = {
-    "cuil_afiliado": 2,
-}
-
-
 def leer_informacion_clientes(txt_informacion, mapeo_campos):
     clientes = []
     try:
         with open(txt_informacion, "r") as file:
             lines = file.readlines()
-            for i in range(0, len(lines), 3):
-                cliente = {}
-                datos_linea_1 = lines[i].strip().split(";")
-                # datos_linea_2 = lines[i+1].strip().split(';')
-                # datos_linea_3 = lines[i+2].strip().split(';')
-
-                cliente["cuil_afiliado"] = datos_linea_1[mapeo_campos["cuil_afiliado"]]
-
-                clientes.append(cliente)
+            total_lines = len(lines)
+            i = 0
+            
+            while i < total_lines - 2:  # -2 para asegurar que hay suficientes líneas para un cliente completo
+                # Verificar el patrón de las tres líneas
+                linea1 = lines[i].strip()
+                linea2 = lines[i+1].strip()
+                linea3 = lines[i+2].strip()
+                
+                # Verificar que las líneas empiezan con el patrón correcto
+                if (linea1.startswith("0001") and 
+                    linea2.startswith("0002") and 
+                    linea3.startswith("0003")):
+                    
+                    cliente = {}
+                    datos_linea_1 = linea1.split(";")
+                    # Agregar los datos del cliente usando la primera línea
+                    if len(datos_linea_1) > mapeo_campos["cuil_afiliado"]:
+                        cliente["cuil_afiliado"] = datos_linea_1[mapeo_campos["cuil_afiliado"]]
+                        clientes.append(cliente)
+                    
+                    # Avanzar al siguiente grupo de 3 líneas
+                    i += 3
+                else:
+                    # Si no encuentra el patrón, avanzar una línea
+                    print(f"Advertencia: Patrón no encontrado en línea {i+1}")
+                    i += 1
+                    
     except Exception as e:
         print(f"Error al leer el archivo TXT: {e}")
+    
+    print(f"Total de clientes procesados: {len(clientes)}")
     return clientes
-
-
-def agregar_texto_a_pdf(pdf_modelo, cliente, pdf_final):
-    try:
-        reader = PdfReader(pdf_modelo)
-        writer = PdfWriter()
-
-        packet = io.BytesIO()
-        can = canvas.Canvas(packet, pagesize=letter)
-
-        can.drawString(100, 750, f"{cliente['cuil_afiliado']}")
-
-        can.save()
-
-        packet.seek(0)
-        new_pdf = PdfReader(packet)
-
-        page = reader.pages[0]
-        page.merge_page(new_pdf.pages[0])
-        writer.add_page(page)
-
-        with open(pdf_final, "wb") as output_file:
-            writer.write(output_file)
-    except Exception as e:
-        print(
-            f"Error al generar el PDF para el cliente {cliente['cuil_afiliado']}: {e}"
-        )
-
-
-directorio_actual = os.path.dirname(os.path.abspath(__file__))
-pdf_modelo = os.path.join(directorio_actual, "modelo.pdf")
-txt_informacion = os.path.join(directorio_actual, "clientes.txt")
-
-if not os.path.exists(pdf_modelo):
-    raise FileNotFoundError(f"El archivo {pdf_modelo} no existe.")
-if not os.path.exists(txt_informacion):
-    raise FileNotFoundError(f"El archivo {txt_informacion} no existe.")
-
-clientes = leer_informacion_clientes(txt_informacion, mapeo_campos)
-
-
-for cliente in tqdm(clientes, desc="Generando PDFs"):
-    pdf_final = os.path.join(directorio_actual, f"{cliente['cuil_afiliado']}.pdf")
-    agregar_texto_a_pdf(pdf_modelo, cliente, pdf_final)
