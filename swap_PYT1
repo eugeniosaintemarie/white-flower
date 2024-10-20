@@ -1,38 +1,11 @@
-def leer_informacion_clientes(txt_informacion, mapeo_campos):
-    clientes = []
-    try:
-        with open(txt_informacion, "r") as file:
-            lines = file.readlines()
-            total_lines = len(lines)
-            i = 0
-            
-            while i < total_lines - 2:  # -2 para asegurar que hay suficientes líneas para un cliente completo
-                # Verificar el patrón de las tres líneas
-                linea1 = lines[i].strip()
-                linea2 = lines[i+1].strip()
-                linea3 = lines[i+2].strip()
-                
-                # Verificar que las líneas empiezan con el patrón correcto
-                if (linea1.startswith("0001") and 
-                    linea2.startswith("0002") and 
-                    linea3.startswith("0003")):
-                    
-                    cliente = {}
-                    datos_linea_1 = linea1.split(";")
-                    # Agregar los datos del cliente usando la primera línea
-                    if len(datos_linea_1) > mapeo_campos["cuil_afiliado"]:
-                        cliente["cuil_afiliado"] = datos_linea_1[mapeo_campos["cuil_afiliado"]]
-                        clientes.append(cliente)
-                    
-                    # Avanzar al siguiente grupo de 3 líneas
-                    i += 3
-                else:
-                    # Si no encuentra el patrón, avanzar una línea
-                    print(f"Advertencia: Patrón no encontrado en línea {i+1}")
-                    i += 1
-                    
-    except Exception as e:
-        print(f"Error al leer el archivo TXT: {e}")
-    
-    print(f"Total de clientes procesados: {len(clientes)}")
-    return clientes
+from pathlib import Path
+
+directorio_actual = Path(__file__).parent
+
+archivos = list(directorio_actual.glob("NYL20*COLMASIVO.txt"))
+
+if archivos:
+    archivo_txt = archivos[0]
+    print(f"Archivo encontrado: {archivo_txt}")
+else:
+    print("No se encontró ningún archivo que coincida con el patrón.")
