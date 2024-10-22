@@ -1,31 +1,15 @@
-# Procesa cada cliente, línea 1 y línea 2
-for i in range(0, len(lines), 2):
-    if i + 1 < len(lines):  # Asegúrate de que haya una línea 2 correspondiente
-        cliente = {}
-
-        # Procesa la primera línea
-        datos_linea_1 = lines[i].strip().split(';')
-
-        # Procesa la segunda línea
-        datos_linea_2 = lines[i + 1].strip().split(';')
-
-        # Mapear los campos de la primera línea
-        cliente['nombre'] = datos_linea_1[0]
-        cliente['apellido'] = datos_linea_1[1]
-        # Otros campos de la primera línea...
-
-        # Mapear los campos de la segunda línea
-        cliente['monto1'] = datos_linea_2[0]  # Monto 1 siempre presente
-
-        # Verificación para el campo Monto 2
-        cliente['monto2'] = datos_linea_2[1] if len(datos_linea_2) > 1 and datos_linea_2[1] != '' else ' '
-
-        # Verificación para el campo Monto 3
-        cliente['monto3'] = datos_linea_2[2] if len(datos_linea_2) > 2 and datos_linea_2[2] != '' else ' '
-
-        # Otros campos de la segunda línea...
-
-        # Guardar cliente en la lista
-        clientes.append(cliente)
-    else:
-        print(f"Advertencia: falta información para el cliente en la línea {i}")
+def obtener_campo(datos_linea, mapeo_campos, campo, valor_defecto=' '):
+    """
+    Función que obtiene un campo específico de una lista de datos según el mapeo dado.
+    Si el campo no existe o está vacío, devuelve un valor por defecto.
+    
+    :param datos_linea: Lista con los datos de la línea del TXT.
+    :param mapeo_campos: Diccionario con el mapeo de campos y sus posiciones.
+    :param campo: Clave del campo a obtener del mapeo.
+    :param valor_defecto: Valor a devolver si el campo está vacío o no existe (por defecto es un espacio).
+    :return: Valor del campo o el valor por defecto.
+    """
+    indice = mapeo_campos.get(campo, None)
+    if indice is not None and len(datos_linea) > indice and datos_linea[indice] != '':
+        return datos_linea[indice]
+    return valor_defecto
