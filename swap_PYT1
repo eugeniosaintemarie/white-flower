@@ -1,37 +1,9 @@
-from pathlib import Path
+periodo = input("Ingresar el periodo (formato AAMM): ").zfill(4)
 
-def extraer_registros(txt_base, txt_final):
-    with open(txt_base, 'r') as archivo:
-        lineas = archivo.readlines()
+coldviewArchivo = f"NYL20{numero}MASIVOS.txt"
 
-    with open(txt_final, 'w') as salida:
-        i = 1
-        while i < len(lineas):
-            if lineas[i].startswith('0000000001;001;'):
-                salida.write(lineas[i])
-                if i + 1 < len(lineas):
-                    salida.write(lineas[i + 1])
-                if i + 2 < len(lineas):
-                    salida.write(lineas[i + 2])
-                i += 3
-            else:
-                i += 1
-
-# Define los directorios y archivos usando Path
-directorio_actual = Path(__file__).parent.resolve()
-txt_prefijo = "NYL20"
-txt_sufijo = "281COLMASIVO.txt"
-
-# Buscar el archivo que coincida con el prefijo y sufijo
-txt_encontrado = None
-for archivo in directorio_actual.iterdir():
-    if archivo.is_file() and archivo.name.startswith(txt_prefijo) and archivo.name.endswith(txt_sufijo):
-        txt_encontrado = archivo
-        break
-
-if txt_encontrado:
-    txt_base = txt_encontrado
-    txt_destino = directorio_actual / "2.0_colivev_ventanilla.txt"
-    extraer_registros(txt_base, txt_destino)
+pagadorPregunta = input("¿Sigue pagando HSBC? (S/N): ").strip().lower()
+if pagadorPregunta == "s":
+    pagadorNuevo = False
 else:
-    print("No se encontró ningún archivo que coinc
+    pagadorNuevo = True
