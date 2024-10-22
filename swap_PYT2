@@ -1,1 +1,24 @@
+# Número esperado de campos en cada línea
+NUMERO_ESPERADO_DE_CAMPOS = 10  # Ajusta según el número real de campos
 
+for i in range(0, len(lines), 2):
+    if i + 1 < len(lines):  # Asegúrate de no salir del índice
+        cliente = {}
+        
+        # Procesa la primera línea y asegúrate de que siempre tenga el número esperado de campos
+        datos_linea_1 = lines[i].strip().split(';')
+        datos_linea_1 += [' '] * (NUMERO_ESPERADO_DE_CAMPOS - len(datos_linea_1))  # Rellena con espacios si faltan campos
+        
+        # Procesa la segunda línea de la misma manera
+        datos_linea_2 = lines[i + 1].strip().split(';')
+        datos_linea_2 += [' '] * (NUMERO_ESPERADO_DE_CAMPOS - len(datos_linea_2))  # Rellena con espacios si faltan campos
+
+        # Ahora puedes asignar los valores a los campos de 'cliente'
+        cliente['campo1'] = datos_linea_1[0]
+        cliente['campo2'] = datos_linea_2[0]
+        # etc... para los demás campos
+
+        # Guardar cliente en la lista
+        clientes.append(cliente)
+    else:
+        print(f"Advertencia: falta información para el cliente en la línea {i}")
