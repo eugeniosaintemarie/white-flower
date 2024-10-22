@@ -1,27 +1,29 @@
 # Procesa cada cliente, línea 1 y línea 2
 for i in range(0, len(lines), 2):
-    if i + 1 < len(lines):  # Asegúrate de no salir del índice
+    if i + 1 < len(lines):  # Asegúrate de que haya una línea 2 correspondiente
         cliente = {}
 
-        # Procesa la primera línea (suponiendo que siempre tiene el mismo número de campos)
+        # Procesa la primera línea
         datos_linea_1 = lines[i].strip().split(';')
 
         # Procesa la segunda línea
         datos_linea_2 = lines[i + 1].strip().split(';')
 
-        # Verificar si hay suficientes campos
-        if len(datos_linea_2) < 15:
-            print(f"Advertencia: línea {i + 1} tiene menos de 15 campos, rellenando con espacios.")
-            # Rellenar con espacios si tiene menos de 15 campos
-            datos_linea_2 += [' '] * (15 - len(datos_linea_2))
+        # Mapear los campos de la primera línea
+        cliente['nombre'] = datos_linea_1[0]
+        cliente['apellido'] = datos_linea_1[1]
+        # Otros campos de la primera línea...
 
-        # Mapear los campos usando índices, asegurándose que no haya out of range
-        cliente['campo1'] = datos_linea_1[0]  # Ejemplo con la línea 1
-        cliente['campo2'] = datos_linea_2[0]  # Campo 2
-        cliente['campo3'] = datos_linea_2[1] if len(datos_linea_2) > 1 else ' '  # Campo 3
-        cliente['campo4'] = datos_linea_2[2] if len(datos_linea_2) > 2 else ' '  # Campo 4
-        # Sigue mapenado los demás campos de forma similar
-        cliente['campo15'] = datos_linea_2[14] if len(datos_linea_2) > 14 else ' '  # Campo 15
+        # Mapear los campos de la segunda línea
+        cliente['monto1'] = datos_linea_2[0]  # Monto 1 siempre presente
+
+        # Verificación para el campo Monto 2
+        cliente['monto2'] = datos_linea_2[1] if len(datos_linea_2) > 1 and datos_linea_2[1] != '' else ' '
+
+        # Verificación para el campo Monto 3
+        cliente['monto3'] = datos_linea_2[2] if len(datos_linea_2) > 2 and datos_linea_2[2] != '' else ' '
+
+        # Otros campos de la segunda línea...
 
         # Guardar cliente en la lista
         clientes.append(cliente)
