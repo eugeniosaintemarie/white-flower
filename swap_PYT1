@@ -1,18 +1,5 @@
-import os
-
-# Define el prefijo y sufijo que quieres buscar
-prefijo = "inicio"
-sufijo = "final.txt"
-
-# Busca el archivo en el directorio actual
-archivo_encontrado = None
-for archivo in os.listdir('.'):
-    if archivo.startswith(prefijo) and archivo.endswith(sufijo):
-        archivo_encontrado = archivo
-        break  # Sal del bucle al encontrar el archivo
-
-# Ahora la variable 'archivo_encontrado' contiene el archivo si fue encontrado
-if archivo_encontrado:
-    print(f"Archivo encontrado: {archivo_encontrado}")
+if txt_encontrado is not None:
+    txt_base = os.path.join(directorio_actual, txt_encontrado)
 else:
-    print("No se encontró ningún archivo que coincida.")
+    print("No se encontró ningún archivo que coincida con el prefijo y sufijo.")
+    # Manejar el error o terminar la ejecución si es necesario
