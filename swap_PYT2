@@ -9,22 +9,19 @@ for i in range(0, len(lines), 2):
         # Procesa la segunda línea
         datos_linea_2 = lines[i + 1].strip().split(';')
 
-        # Si hay menos de 15 campos, rellena con espacios los campos faltantes
-        while len(datos_linea_2) < 15:
-            datos_linea_2.append(' ')
+        # Verificar si hay suficientes campos
+        if len(datos_linea_2) < 15:
+            print(f"Advertencia: línea {i + 1} tiene menos de 15 campos, rellenando con espacios.")
+            # Rellenar con espacios si tiene menos de 15 campos
+            datos_linea_2 += [' '] * (15 - len(datos_linea_2))
 
-        # Asigna los valores de los campos, verificando si están vacíos
+        # Mapear los campos usando índices, asegurándose que no haya out of range
         cliente['campo1'] = datos_linea_1[0]  # Ejemplo con la línea 1
-        cliente['campo2'] = datos_linea_2[0]  # Siempre procesamos el campo 2
-
-        # Verificamos campos que podrían estar vacíos
-        cliente['campo3'] = datos_linea_2[1] if datos_linea_2[1] else ' '  # Campo 3 no puede estar vacío
-        cliente['campo4'] = datos_linea_2[2] if datos_linea_2[2] else ' '  # Campo 4 no puede estar vacío
-        # Sigue verificando otros campos que pueden estar vacíos...
-
-        # Campos que no necesitan verificación (si están seguros que nunca estarán vacíos)
-        cliente['campo14'] = datos_linea_2[13]  # Ejemplo con el campo 14
-        cliente['campo15'] = datos_linea_2[14]  # Ejemplo con el campo 15
+        cliente['campo2'] = datos_linea_2[0]  # Campo 2
+        cliente['campo3'] = datos_linea_2[1] if len(datos_linea_2) > 1 else ' '  # Campo 3
+        cliente['campo4'] = datos_linea_2[2] if len(datos_linea_2) > 2 else ' '  # Campo 4
+        # Sigue mapenado los demás campos de forma similar
+        cliente['campo15'] = datos_linea_2[14] if len(datos_linea_2) > 14 else ' '  # Campo 15
 
         # Guardar cliente en la lista
         clientes.append(cliente)
