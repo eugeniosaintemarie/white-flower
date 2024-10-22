@@ -1,11 +1,18 @@
-from pathlib import Path
+import os
 
-directorio_actual = Path(__file__).parent
+# Define el prefijo y sufijo que quieres buscar
+prefijo = "inicio"
+sufijo = "final.txt"
 
-archivos = list(directorio_actual.glob("NYL20*COLMASIVO.txt"))
+# Busca el archivo en el directorio actual
+archivo_encontrado = None
+for archivo in os.listdir('.'):
+    if archivo.startswith(prefijo) and archivo.endswith(sufijo):
+        archivo_encontrado = archivo
+        break  # Sal del bucle al encontrar el archivo
 
-if archivos:
-    archivo_txt = archivos[0]
-    print(f"Archivo encontrado: {archivo_txt}")
+# Ahora la variable 'archivo_encontrado' contiene el archivo si fue encontrado
+if archivo_encontrado:
+    print(f"Archivo encontrado: {archivo_encontrado}")
 else:
-    print("No se encontró ningún archivo que coincida con el patrón.")
+    print("No se encontró ningún archivo que coincida.")
