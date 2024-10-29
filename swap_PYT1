@@ -1,9 +1,1 @@
-periodo = input("Ingresar el periodo (formato AAMM): ").zfill(4)
 
-coldviewArchivo = f"NYL20{numero}MASIVOS.txt"
-
-pagadorPregunta = input("¿Sigue pagando HSBC? (S/N): ").strip().lower()
-if pagadorPregunta == "s":
-    pagadorNuevo = False
-else:
-    pagadorNuevo = True
