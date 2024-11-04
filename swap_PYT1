@@ -1,1 +1,20 @@
+import os
+import pikepdf
 
+def compress_pdfs(input_folder, output_folder):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    for filename in os.listdir(input_folder):
+        if filename.endswith('.pdf'):
+            input_path = os.path.join(input_folder, filename)
+            output_path = os.path.join(output_folder, filename)
+
+            with pikepdf.open(input_path) as pdf:
+                pdf.save(output_path, optimize_content_streams=True, compress_streams=True)
+            print(f"Archivo comprimido: {filename}")
+
+input_folder = './pdfs_originales'   # Cambia esto a la ruta de tu carpeta de PDFs
+output_folder = './pdfs_comprimidos' # Cambia esto a la carpeta donde guardarás los PDFs comprimidos
+
+compress_pdfs(input_folder, output_folder)
