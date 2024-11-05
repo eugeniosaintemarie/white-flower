@@ -1,7 +1,8 @@
 import os
-import fitz  # PyMuPDF
+from PyPDF2 import PdfReader, PdfWriter
 
 def compress_pdf(input_folder, output_folder):
+    # Crear la carpeta de salida si no existe
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -10,13 +11,23 @@ def compress_pdf(input_folder, output_folder):
             input_path = os.path.join(input_folder, filename)
             output_path = os.path.join(output_folder, filename)
 
-            # Abrir el PDF
-            with fitz.open(input_path) as pdf:
-                # Guardar con opciones de compresión
-                pdf.save(output_path, garbage=4, deflate=True)
+            # Leer el archivo PDF
+            reader = PdfReader(input_path)
+            writer = PdfWriter()
+
+            # Añadir cada página al nuevo archivo comprimido
+            for page_num in range(len(reader.pages)):
+                page = reader.pages[page_num]
+                writer.add_page(page)
+
+            # Guardar el nuevo PDF sin metadatos
+            with open(output_path, "wb") as output_pdf:
+                writer.write(output_pdf)
+
             print(f"Archivo comprimido: {filename}")
 
-input_folder = './pdfs_originales'   # Cambia a la ruta de tu carpeta de PDFs
-output_folder = './pdfs_comprimidos' # Cambia a la carpeta donde guardarás los PDFs comprimidos
+# Cambia estas rutas a tus carpetas
+input_folder = './pdfs_originales'    # Carpeta con PDFs de entrada
+output_folder = './pdfs_comprimidos'  # Carpeta donde se guardarán los PDFs comprimidos
 
 compress_pdf(input_folder, output_folder)
