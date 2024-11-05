@@ -1,1 +1,41 @@
+import os
+import fitz  # PyMuPDF
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
+def recreate_pdf(input_path, output_path):
+    # Abrir el PDF de origen
+    with fitz.open(input_path) as pdf:
+        # Crear un nuevo PDF optimizado con ReportLab
+        c = canvas.Canvas(output_path, pagesize=letter)
+        
+        for page_num in range(pdf.page_count):
+            page = pdf[page_num]
+            text = page.get_text("text")  # Extraer solo el texto
+            
+            # Añadir el texto extraído a la nueva página del PDF
+            c.setFont("Helvetica", 10)
+            c.drawString(50, 750, text)
+            c.showPage()
+        
+        c.save()
+
+def compress_pdfs(input_folder, output_folder):
+    # Crear la carpeta de salida si no existe
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    for filename in os.listdir(input_folder):
+        if filename.endswith('.pdf'):
+            input_path = os.path.join(input_folder, filename)
+            output_path = os.path.join(output_folder, filename)
+
+            # Recrear el PDF optimizado
+            recreate_pdf(input_path, output_path)
+            print(f"Archivo comprimido y recreado: {filename}")
+
+# Cambia estas rutas a tus carpetas
+input_folder = './pdfs_originales'    # Carpeta con PDFs de entrada
+output_folder = './pdfs_comprimidos'  # Carpeta donde se guardarán los PDFs comprimidos
+
+compress_pdfs(input_folder, output_folder)
