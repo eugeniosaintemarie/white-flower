@@ -1,13 +1,17 @@
-# Define la ubicación donde se guardará el archivo
-$logFolder = "C:\Logs"
-if (!(Test-Path -Path $logFolder)) {
-    New-Item -ItemType Directory -Path $logFolder
+# Nombre del archivo con la ubicación de guardado
+$filePath = "C:\Logs\logfile.txt"
+
+# Contenido del log con la fecha y hora actual
+$logContent = "Log generado en: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+
+# Verificar si el archivo ya existe
+if (Test-Path $filePath) {
+    # Si el archivo existe, lo reemplaza
+    Remove-Item $filePath -Force
 }
 
-# Genera el nombre del archivo con fecha y hora
-$timestamp = (Get-Date).ToString("yyyy-MM-dd_HH-mm-ss")
-$logFile = "$logFolder\Log_$timestamp.txt"
+# Crear el archivo con el contenido del log
+New-Item -Path $filePath -ItemType File -Value $logContent
 
-# Escribe la hora en que terminó el script dentro del archivo
-$endTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-"El script finalizó a las: $endTime" | Out-File -FilePath $logFile -Encoding UTF8
+# Confirmación
+Write-Output "Archivo log generado/reemplazado en: $filePath"
