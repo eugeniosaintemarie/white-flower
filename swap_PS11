@@ -1,47 +1,13 @@
-
-function Modificar-Archivo {
-    param (
-        [string]$rutaArchivo
-    )
-
-    # Leer todas las líneas del archivo
-    $lineas = Get-Content -Path $rutaArchivo
-
-    # Crear una lista para almacenar las nuevas líneas
-    $nuevasLineas = @()
-
-    foreach ($linea in $lineas) {
-        if ($linea.Length -ge 111) {
-            if ($linea[110] -match '\d') {
-                # Modificar la línea
-                $linea = $linea.Substring(0, 110) + "0" + $linea.Substring(111)
-            }
-        }
-        $nuevasLineas += $linea
-    }
-
-    # Sobrescribir el archivo con las nuevas líneas
-    $nuevasLineas | Set-Content -Path $rutaArchivo
+# Define la ubicación donde se guardará el archivo
+$logFolder = "C:\Logs"
+if (!(Test-Path -Path $logFolder)) {
+    New-Item -ItemType Directory -Path $logFolder
 }
 
-function Procesar-Archivos {
-    param (
-        [string]$directorio
-    )
+# Genera el nombre del archivo con fecha y hora
+$timestamp = (Get-Date).ToString("yyyy-MM-dd_HH-mm-ss")
+$logFile = "$logFolder\Log_$timestamp.txt"
 
-    # Recorrer todos los archivos del directorio y subdirectorios
-    Get-ChildItem -Path $directorio -Recurse -Filter "*.txt" | ForEach-Object {
-        if ($_.Name -like "ABM_HSBC*") {
-            # Verificar que el archivo no esté vacío
-            if ($_.Length -gt 0) {
-                Modificar-Archivo -rutaArchivo $_.FullName
-            }
-        }
-    }
-}
-
-# Ruta del directorio a procesar
-$rutaRed = "\\\\Wftsf1106\\NYLCD\\BankAssurance\\Assurant\\Receive"
-
-# Procesar los archivos
-Procesar-Archivos -directorio $rutaRed
+# Escribe la hora en que terminó el script dentro del archivo
+$endTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+"El script finalizó a las: $endTime" | Out-File -FilePath $logFile -Encoding UTF8
