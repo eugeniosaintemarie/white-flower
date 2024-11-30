@@ -1,41 +1,191 @@
+# TXT DE CREDENCIALES
+# servidor=mi_servidor
+# usuario=mi_usuario
+# contrasena=mi_contrasena
+# base_de_datos=mi_base
+
 import os
-import fitz  # PyMuPDF
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+import pyodbc
+from datetime import datetime
+import csv
+import shutil
 
-def recreate_pdf(input_path, output_path):
-    # Abrir el PDF de origen
-    with fitz.open(input_path) as pdf:
-        # Crear un nuevo PDF optimizado con ReportLab
-        c = canvas.Canvas(output_path, pagesize=letter)
-        
-        for page_num in range(pdf.page_count):
-            page = pdf[page_num]
-            text = page.get_text("text")  # Extraer solo el texto
-            
-            # Añadir el texto extraído a la nueva página del PDF
-            c.setFont("Helvetica", 10)
-            c.drawString(50, 750, text)
-            c.showPage()
-        
-        c.save()
 
-def compress_pdfs(input_folder, output_folder):
-    # Crear la carpeta de salida si no existe
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+def leer_credenciales(ruta_archivo):
+    credenciales = {}
+    with open(ruta_archivo, "r") as archivo:
+        for linea in archivo:
+            clave, valor = linea.strip().split("=")
+            credenciales[clave] = valor
+    return credenciales
 
-    for filename in os.listdir(input_folder):
-        if filename.endswith('.pdf'):
-            input_path = os.path.join(input_folder, filename)
-            output_path = os.path.join(output_folder, filename)
 
-            # Recrear el PDF optimizado
-            recreate_pdf(input_path, output_path)
-            print(f"Archivo comprimido y recreado: {filename}")
+ubicacion_actual = os.path.dirname(os.path.abspath(__file__))
 
-# Cambia estas rutas a tus carpetas
-input_folder = './pdfs_originales'    # Carpeta con PDFs de entrada
-output_folder = './pdfs_comprimidos'  # Carpeta donde se guardarán los PDFs comprimidos
 
-compress_pdfs(input_folder, output_folder)
+# 0.1 _________________________ LOGGEO
+ubicacion_credenciales = os.path.join(ubicacion_actual, "0.0_credenciales.txt")
+credenciales = leer_credenciales(ubicacion_credenciales)
+conexion = pyodbc.connect(
+    f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+    f'SERVER={credenciales["servidor"]};'
+    f'DATABASE={credenciales["base_de_datos"]};'
+    f'UID={credenciales["usuario"]};'
+    f'PWD={credenciales["contrasena"]}'
+)
+cursor = conexion.cursor()
+print(f"0.1 _ Conexión iniciada\n      ")
+
+
+# 0.5 _________________________ BACKUP
+fecha_actual = datetime.now().strftime("%Y%m%d")
+tabla = "LIFE_BASE_RECIBOS_RVP_COVID19"
+archivo_respaldo = os.path.join(
+    ubicacion_actual, f"0.1_{tabla}_backup{fecha_actual}.csv"
+)
+try:
+    query = f"SELECT * FROM {tabla}"
+    cursor.execute(query)
+    columnas = [columna[0] for columna in cursor.description]
+
+    with open(archivo_respaldo, "w", newline="", encoding="utf-8") as archivo_csv:
+        escritor = csv.writer(archivo_csv)
+        escritor.writerow(columnas)
+        escritor.writerows(cursor.fetchall())
+
+    print(
+        f"0.5 _ Respaldo de la tabla '{tabla}' realizado en:\n      {archivo_respaldo}\n      "
+    )
+except Exception as e:
+    print(f"0.5 _ Error al respaldar la tabla: {e}")
+    conexion.close()
+    exit()
+
+
+# 0.9 _________________________ DIPONIBILIDAD
+fechaDisponibilidad = input(
+    "0.9 _ Ingresar 'fecha hasta' de disponibilidad en formato AAAAMMDD: "
+)
+aaaamm = fechaDisponibilidad[:6]
+aaaammdd = aaaamm = fechaDisponibilidad[:6]
+print(f"      ")
+
+
+# 2.1 _________________________ CREACIÓN 1
+ubicacion_txt = os.path.join(ubicacion_actual, "1.0_recibos.txt")
+ubicacion_sql_txt = os.path.join(
+    ubicacion_actual, f"2.1_INSERTs(log_{fecha_actual}).sql"
+)
+
+with open(ubicacion_txt, "r") as archivo_txt:
+    with open(ubicacion_sql_txt, "w") as archivo_sql:
+        for linea in archivo_txt:
+            cuil_sin_extension = linea.strip()
+
+            if not cuil_sin_extension.endswith(".pdf"):
+                continue
+
+            cuil_sin_guiones = cuil_sin_extension.replace("-", "")
+
+            dni = cuil_sin_extension[3:11]
+
+            sentencia_sql = (
+                f"INSERT INTO LIFE_BASE_RECIBOS_RVP_COVID19 VALUES "
+                f"('{aaaamm}', '{cuil_sin_extension}', '{cuil_sin_guiones}', '{dni}', '{cuil_sin_extension}.pdf', 0, 0, GETDATE(), '{aaaammdd}');\n"
+            )
+
+            archivo_sql.write(sentencia_sql)
+
+            try:
+                cursor.execute(sentencia_sql)
+                conexion.commit()
+            except Exception as e:
+                conexion.rollback()
+                print(f"2.1 _ Error al ejecutar la sentencia SQL: {e}")
+                # conexion.close()
+                # exit()")
+
+print(f"2.1 _ INSERTs1 ejecutados, log guardado en:\n      {ubicacion_sql_txt}\n      ")
+
+
+# 2.2 _________________________ CREACIÓN 2
+ubicacion_sql2 = os.path.join(ubicacion_actual, "2.2_INSERTsUPDATEs.sql")
+
+with open(ubicacion_sql2, "r") as archivo_sql:
+    codigo_sql = archivo_sql.read()
+    codigo_sql_reemplazado = codigo_sql.replace("AAAAMM", aaaamm)
+
+try:
+    for sentencia in codigo_sql_reemplazado.split(";"):
+        sentencia = sentencia.strip()
+        if sentencia:
+            cursor.execute(sentencia)
+    conexion.commit()
+    print("2.2 _ INSERTs2 y UPDATEs ejecutados\n      ")
+except Exception as e:
+    conexion.rollback()
+    print(f"2.2 _ Error: {e}")
+# finally:
+# conexion.close()
+# print("Conexión cerrada")
+
+
+# 3.x _________________________ RENOMBRAMIENTO Y SUBIDA
+query = f"SELECT CUIL1, TRX_ID, 40 FROM LIFE_BASE_RECIBOS_RVP_COVID19 WHERE PERIODO = '{aaaamm}' AND CONVERT(VARCHAR,FEC_ALTA,112) = CONVERT(VARCHAR,GETDATE(),112)"
+cursor.execute(query)
+resultados = cursor.fetchall()
+
+ubicacion_pdfs = os.path.join(ubicacion_actual, "Recibos web")
+ubicacion_servidor = r"\\ubicacion\de\red\destino"
+
+print(f"3.1 _ Renombrando los {len(resultados)} archivos PDF")
+for nombre_archivo, trx in resultados:
+    nombre_archivo_pdf = f"{nombre_archivo}.pdf"
+    nombre_actual = os.path.join(ubicacion_pdfs, nombre_archivo_pdf)
+    if not os.path.exists(nombre_actual):
+        print(f"      Archivo no encontrado: {nombre_actual}")
+        continue
+
+    # 3.1 _____ RENOMBRAMIENTO
+    nuevo_nombre = f"{trx}_40_{nombre_archivo_pdf}"
+    ruta = os.path.join(ubicacion_pdfs, nuevo_nombre)
+    os.rename(nombre_actual, ruta)
+    print(f"      {nombre_actual} >> {ruta}")
+
+    # 3.2 _____ SUBIDA
+    destino_copiado = os.path.join(ubicacion_servidor, nuevo_nombre)
+    try:
+        shutil.copy(ruta, destino_copiado)
+        print(f"      Archivo subido")
+    except Exception as e:
+        print(f"      Error subiendo el archivo: {e}")
+        continue
+    # 3.2 _____ BORRADO
+    try:
+        os.remove(ruta)
+        print(f"      Local eliminado")
+    except Exception as e:
+        print(f"      Error eliminando local: {e}")
+
+# 4.0 _________________________ RELACIÓN
+ubicacion_sql3 = os.path.join(ubicacion_actual, "4.0_INSERTs.sql")
+
+with open(ubicacion_sql3, "r") as archivo_sql:
+    codigo_sql = archivo_sql.read()
+    codigo_sql_reemplazado = codigo_sql.replace("AAAAMM", aaaamm)
+
+try:
+    for sentencia in codigo_sql_reemplazado.split(";"):
+        sentencia = sentencia.strip()
+        if sentencia:
+            cursor.execute(sentencia)
+    conexion.commit()
+    print("4.0 _ INSERTs3 ejecutados\n      ")
+except Exception as e:
+    conexion.rollback()
+    print(f"4.0 _ Error: {e}")
+
+# 9.9 _________________________ FIN
+conexion.close()
+print("9.9 _ Conexión cerrada\n      ")
+input("'ENTER' para cerrar programa")
