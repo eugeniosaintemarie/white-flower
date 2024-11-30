@@ -1,17 +1,1 @@
-# Nombre del archivo con la ubicación de guardado
-$filePath = "C:\Logs\logfile.txt"
 
-# Contenido del log con la fecha y hora actual
-$logContent = "Log generado en: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-
-# Verificar si el archivo ya existe
-if (Test-Path $filePath) {
-    # Si el archivo existe, lo reemplaza
-    Remove-Item $filePath -Force
-}
-
-# Crear el archivo con el contenido del log
-New-Item -Path $filePath -ItemType File -Value $logContent
-
-# Confirmación
-Write-Output "Archivo log generado/reemplazado en: $filePath"
