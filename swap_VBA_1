@@ -143,6 +143,11 @@ Function MoverPieza() As Boolean
                 End If
             Next j
         Next i
+        ' Aquí es donde el juego "termina" si no hay espacio para una nueva pieza
+        If fila = 1 Then
+            juegoActivo = False ' No puede generar una nueva pieza
+            Exit Function
+        End If
         GenerarPieza
         fila = 1
         columna = 5
@@ -211,26 +216,4 @@ Sub Rotar()
         piezaActual = nuevaPieza
         MoverPieza
     End If
-End Sub
-
-Function PuedeMoverPieza(piezaAcomprobar() As Boolean) As Boolean
-    ' Verifica si la nueva pieza puede moverse
-    Dim i As Integer, j As Integer
-    Dim puedeMover As Boolean
-    puedeMover = True
-
-    ' Verificar si la pieza se mueve sin colisiones
-    For i = 1 To 4
-        For j = 1 To 4
-            If piezaAcomprobar(i, j) Then
-                If fila + i > 20 Or columna + j > 10 Or columna + j < 1 Then
-                    puedeMover = False
-                End If
-                If fila + i > 20 Then
-                    puedeMover = False ' Colisión con el fondo
-                End If
-            End If
-        Next j
-    Next i
-    PuedeMoverPieza = puedeMover
-End Function
+End
