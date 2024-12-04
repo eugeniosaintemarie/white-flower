@@ -76,56 +76,78 @@ Sub MoverPieza(ByVal direccion As String)
         Case "derecha"
             If Not Colision(piezaActual, x + 1, y) Then x = x + 1
         Case "abajo"
-            If Not Colision(piezaActual, x, y + 1) Then y = y + 1 Else EndGame
+            If Not Colision(piezaActual, x, y + 1) Then
+                y = y + 1
+            Else
+                ' Fijar pieza y generar nueva
+                DibujarPieza piezaActual, x, y
+                GenerarNuevaPieza
+            End If
     End Select
     DibujarPieza piezaActual, x, y ' Dibujar la pieza en la nueva posición
 End Sub
 
-Sub EndGame()
-    timerActivo = False
-    MsgBox "Game Over"
-    End
-End Sub
-
-Sub IniciarJuego()
+Sub GenerarNuevaPieza()
     Dim i As Integer
-    Call ConfigurarPiezas
-    Call LimpiarTablero
-    Randomize
-
-    ' Inicializar la primera pieza
-    piezaActual = piezas(Int(Rnd * 7))
+    piezaActual = siguientePieza
     siguientePieza = piezas(Int(Rnd * 7))
     x = 4: y = 1
-    DibujarPieza piezaActual, x, y
     DibujarProximaPieza
 
-    timerActivo = True
-    Application.OnTime Now + TimeValue("00:00:01"), "BajarPieza"
-End Sub
-
-Sub BajarPieza()
-    If timerActivo Then
-        MoverPieza "abajo"
-        Application.OnTime Now + TimeValue("00:00:01"), "BajarPieza"
+    ' Comprobar si la nueva pieza colisiona inmediatamente (Game Over)
+    If Colision(piezaActual, x, y) Then
+        timerActivo = False
+        MsgBox "Game Over"
+        End
     End If
 End Sub
 
-Sub LimpiarTablero()
+Sub InicializarJuego()
     Dim i As Integer, j As Integer
+
+    ' Configurar las piezas
+    ConfigurarPiezas
+
+    ' Limpiar el tablero
     For i = 1 To 20
         For j = 1 To 10
             Cells(i, j).Interior.Color = RGB(255, 255, 255) ' Blanco
         Next j
     Next i
+
+    ' Generar la primera pieza
+    Randomize
+    siguientePieza = piezas(Int(Rnd * 7))
+    GenerarNuevaPieza
+
+    ' Dibujar la próxima pieza
+    DibujarProximaPieza
+
+    ' Configurar teclas
+    Application.OnKey "{LEFT}", "MoverIzquierda"
+    Application.OnKey "{RIGHT}", "MoverDerecha"
+    Application.OnKey "{DOWN}", "MoverAbajo"
+
+    ' Iniciar el temporizador
+    timerActivo = True
+    Application.OnTime Now + TimeValue("00:00:01"), "ActualizarJuego"
 End Sub
 
-Sub KeyDown()
-    Dim keyCode As String
-    keyCode = Application.InputBox("Ingresa una tecla (a = izquierda, d = derecha, s = abajo):", "Control", Type:=2)
-    Select Case keyCode
-        Case "a": MoverPieza "izquierda"
-        Case "d": MoverPieza "derecha"
-        Case "s": MoverPieza "abajo"
-    End Select
+Sub ActualizarJuego()
+    If timerActivo Then
+        MoverPieza "abajo"
+        Application.OnTime Now + TimeValue("00:00:01"), "ActualizarJuego"
+    End If
+End Sub
+
+Sub MoverIzquierda()
+    MoverPieza "izquierda"
+End Sub
+
+Sub MoverDerecha()
+    MoverPieza "derecha"
+End Sub
+
+Sub MoverAbajo()
+    MoverPieza "abajo"
 End Sub
