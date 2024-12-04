@@ -3,12 +3,14 @@ Dim piezaActual(1 To 4, 1 To 4) As Boolean
 Dim fila As Integer
 Dim columna As Integer
 Dim totalLineas As Integer
+Dim juegoActivo As Boolean
 
 Sub IniciarJuego()
     ' Inicialización de variables
     fila = 1
     columna = 5
     totalLineas = 0
+    juegoActivo = True
     ' Limpiar pantalla
     Cells.Clear
     ' Establecer bordes visibles
@@ -27,10 +29,10 @@ End Sub
 Sub LlamarMoverPieza()
     ' Movimiento de la pieza cada 0.5 segundos
     On Error Resume Next
-    Do
-        MoverPieza
+    Do While juegoActivo
+        If Not MoverPieza Then Exit Do
         VerificarLineas
-        If Error.Number <> 0 Then Exit Do
+        ActualizarEstadisticas
         Application.Wait (Now + TimeValue("0:00:01"))
     Loop
     MsgBox "Game Over! Puntuación: " & totalLineas
@@ -42,43 +44,55 @@ Sub GenerarPieza()
     Dim piezaTipo As Integer
     piezaTipo = Int(Rnd * 7) + 1 ' Aleatorio entre 1 y 7
     
+    ' Limpiar pieza actual
+    For i = 1 To 4
+        For j = 1 To 4
+            piezaActual(i, j) = False
+        Next j
+    Next i
+    
     ' Dependiendo del tipo de pieza
     Select Case piezaTipo
         Case 1 ' I
-            ' Asignar la pieza I
-            For i = 1 To 4
-                For j = 1 To 4
-                    piezas(i, j) = False
-                Next j
-            Next i
-            piezas(1, 1) = True
-            piezas(1, 2) = True
-            piezas(1, 3) = True
-            piezas(1, 4) = True
+            piezaActual(1, 1) = True
+            piezaActual(1, 2) = True
+            piezaActual(1, 3) = True
+            piezaActual(1, 4) = True
         Case 2 ' O
-            ' Asignar la pieza O
-            For i = 1 To 4
-                For j = 1 To 4
-                    piezas(i, j) = False
-                Next j
-            Next i
-            piezas(1, 1) = True
-            piezas(1, 2) = True
-            piezas(2, 1) = True
-            piezas(2, 2) = True
-        ' Agregar más piezas aquí (T, L, J, S, Z, etc.)
+            piezaActual(1, 1) = True
+            piezaActual(1, 2) = True
+            piezaActual(2, 1) = True
+            piezaActual(2, 2) = True
+        Case 3 ' T
+            piezaActual(1, 2) = True
+            piezaActual(2, 1) = True
+            piezaActual(2, 2) = True
+            piezaActual(3, 2) = True
+        Case 4 ' L
+            piezaActual(1, 2) = True
+            piezaActual(2, 2) = True
+            piezaActual(3, 2) = True
+            piezaActual(3, 1) = True
+        Case 5 ' J
+            piezaActual(1, 2) = True
+            piezaActual(2, 2) = True
+            piezaActual(3, 2) = True
+            piezaActual(3, 3) = True
+        Case 6 ' Z
+            piezaActual(1, 2) = True
+            piezaActual(2, 2) = True
+            piezaActual(2, 1) = True
+            piezaActual(3, 1) = True
+        Case 7 ' S
+            piezaActual(1, 1) = True
+            piezaActual(1, 2) = True
+            piezaActual(2, 2) = True
+            piezaActual(2, 3) = True
     End Select
-
-    ' Asignar la pieza actual
-    For i = 1 To 4
-        For j = 1 To 4
-            piezaActual(i, j) = piezas(i, j)
-        Next j
-    Next i
 End Sub
 
-Sub MoverPieza()
-    ' Verificar si la pieza puede moverse
+Function MoverPieza() As Boolean
+    ' Verificar si la pieza puede moverse hacia abajo
     Dim i As Integer, j As Integer
     Dim puedeMover As Boolean
     puedeMover = True
@@ -90,12 +104,16 @@ Sub MoverPieza()
                 If fila + i > 20 Or columna + j > 10 Or columna + j < 1 Then
                     puedeMover = False
                 End If
+                If fila + i > 20 Then
+                    puedeMover = False ' Colisión con el fondo
+                End If
             End If
         Next j
     Next i
 
     ' Si puede moverse, moverla
     If puedeMover Then
+        ' Limpiar la posición anterior
         For i = 1 To 4
             For j = 1 To 4
                 If piezaActual(i, j) Then
@@ -103,9 +121,11 @@ Sub MoverPieza()
                 End If
             Next j
         Next i
-
-        ' Mover pieza
+        
+        ' Mover la pieza hacia abajo
         fila = fila + 1
+        
+        ' Dibujar la nueva posición
         For i = 1 To 4
             For j = 1 To 4
                 If piezaActual(i, j) Then
@@ -113,13 +133,22 @@ Sub MoverPieza()
                 End If
             Next j
         Next i
+        MoverPieza = True
     Else
-        ' Si la pieza no puede moverse, generar una nueva
+        ' Si no puede moverse, guardar la pieza y generar una nueva
+        For i = 1 To 4
+            For j = 1 To 4
+                If piezaActual(i, j) Then
+                    Cells(fila + i - 1, columna + j - 1).Interior.Color = RGB(0, 255, 0)
+                End If
+            Next j
+        Next i
         GenerarPieza
         fila = 1
         columna = 5
+        MoverPieza = True
     End If
-End Sub
+End Function
 
 Sub VerificarLineas()
     Dim i As Integer, j As Integer
@@ -153,7 +182,6 @@ Sub VerificarLineas()
 
             ' Aumentar el contador de líneas
             totalLineas = totalLineas + 1
-            ActualizarEstadisticas
         End If
     Next i
 End Sub
@@ -198,9 +226,11 @@ Function PuedeMoverPieza(piezaAcomprobar() As Boolean) As Boolean
                 If fila + i > 20 Or columna + j > 10 Or columna + j < 1 Then
                     puedeMover = False
                 End If
+                If fila + i > 20 Then
+                    puedeMover = False ' Colisión con el fondo
+                End If
             End If
         Next j
     Next i
-
     PuedeMoverPieza = puedeMover
 End Function
