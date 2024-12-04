@@ -2,6 +2,8 @@ Dim piezas(6) As Variant
 Dim piezaActual As Variant
 Dim siguientePieza As Variant
 Dim x As Integer, y As Integer
+Dim totalPiezas As Integer
+Dim totalLineas As Integer
 Dim timerActivo As Boolean
 
 Sub ConfigurarPiezas()
@@ -81,6 +83,7 @@ Sub MoverPieza(ByVal direccion As String)
             Else
                 ' Fijar pieza y generar nueva
                 DibujarPieza piezaActual, x, y
+                VerificarLineas
                 GenerarNuevaPieza
             End If
     End Select
@@ -88,7 +91,7 @@ Sub MoverPieza(ByVal direccion As String)
 End Sub
 
 Sub GenerarNuevaPieza()
-    Dim i As Integer
+    totalPiezas = totalPiezas + 1 ' Incrementar el contador de piezas
     piezaActual = siguientePieza
     siguientePieza = piezas(Int(Rnd * 7))
     x = 4: y = 1
@@ -115,6 +118,11 @@ Sub InicializarJuego()
         Next j
     Next i
 
+    ' Inicializar el contador de piezas y líneas
+    totalPiezas = 0
+    totalLineas = 0
+    ActualizarEstadisticas
+
     ' Generar la primera pieza
     Randomize
     siguientePieza = piezas(Int(Rnd * 7))
@@ -127,6 +135,7 @@ Sub InicializarJuego()
     Application.OnKey "{LEFT}", "MoverIzquierda"
     Application.OnKey "{RIGHT}", "MoverDerecha"
     Application.OnKey "{DOWN}", "MoverAbajo"
+    Application.OnKey "{UP}", "Rotar"
 
     ' Iniciar el temporizador
     timerActivo = True
@@ -150,4 +159,82 @@ End Sub
 
 Sub MoverAbajo()
     MoverPieza "abajo"
+End Sub
+
+Sub Rotar()
+    Dim piezaRotada As Variant
+    piezaRotada = RotarPieza(piezaActual)
+
+    ' Verificar colisión con el tablero
+    If Not Colision(piezaRotada, x, y) Then
+        ' Limpiar la pieza actual
+        DibujarPieza piezaActual, x, y, True
+        ' Actualizar a la pieza rotada
+        piezaActual = piezaRotada
+        ' Dibujar la pieza rotada
+        DibujarPieza piezaActual, x, y
+    End If
+End Sub
+
+Function RotarPieza(ByVal pieza As Variant) As Variant
+    Dim i As Integer, j As Integer
+    Dim filas As Integer, columnas As Integer
+    filas = UBound(pieza) - LBound(pieza) + 1
+    columnas = UBound(pieza(0)) - LBound(pieza(0)) + 1
+    
+    ' Crear una nueva matriz transpuesta
+    Dim piezaRotada() As Variant
+    ReDim piezaRotada(0 To columnas - 1, 0 To filas - 1)
+    
+    ' Rotar la pieza (transponer y luego invertir filas)
+    For i = 0 To filas - 1
+        For j = 0 To columnas - 1
+            piezaRotada(j, filas - 1 - i) = pieza(i)(j)
+        Next j
+    Next i
+
+    RotarPieza = piezaRotada
+End Function
+
+Sub VerificarLineas()
+    Dim i As Integer, j As Integer, esCompleta As Boolean
+
+    For i = 20 To 1 Step -1 ' Recorre de abajo hacia arriba
+        esCompleta = True
+        For j = 1 To 10 ' Comprueba todas las columnas
+            If Cells(i, j).Interior.Color = RGB(255, 255, 255) Then ' Si hay una celda blanca, no está completa
+                esCompleta = False
+                Exit For
+            End If
+        Next j
+
+        If esCompleta Then
+            totalLineas = totalLineas + 1 ' Incrementar líneas desbloqueadas
+            EliminarLinea i
+            i = i + 1 ' Reevalúa la fila actual después de desplazar todo hacia abajo
+        End If
+    Next i
+    ActualizarEstadisticas
+End Sub
+
+Sub EliminarLinea(ByVal fila As Integer)
+    Dim j As Integer
+
+    ' Mover todas las filas hacia abajo
+    For i = fila To 2 Step -1
+        For j = 1 To 10
+            Cells(i, j).Interior.Color = Cells(i - 1, j).Interior.Color
+        Next j
+    Next i
+
+    ' Limpiar la primera fila
+    For j = 1 To 10
+        Cells(1, j).Interior.Color = RGB(255, 255, 255) ' Blanco
+    Next j
+End Sub
+
+Sub ActualizarEstadisticas()
+    ' Mostrar estadísticas de líneas y piezas en el tablero
+    Cells(22, 1).Value = "Piezas: " & totalPiezas
+    Cells(22, 2).Value = "Líneas: " & totalLineas
 End Sub
