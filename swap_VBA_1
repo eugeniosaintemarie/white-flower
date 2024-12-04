@@ -76,7 +76,7 @@ Sub MoverPieza(ByVal direccion As String)
         Case "izquierda"
             If Not Colision(piezaActual, x - 1, y) Then x = x - 1
         Case "derecha"
-            If Not Colision(piezaActual, x + 1, y) Then x = x + 1
+            If Not Colision(piezaActual, x + 1, y) And x + ObtenerAncho(piezaActual) <= 10 Then x = x + 1 ' Bloqueo a la derecha
         Case "abajo"
             If Not Colision(piezaActual, x, y + 1) Then
                 y = y + 1
@@ -202,39 +202,39 @@ Sub VerificarLineas()
     For i = 20 To 1 Step -1 ' Recorre de abajo hacia arriba
         esCompleta = True
         For j = 1 To 10 ' Comprueba todas las columnas
-            If Cells(i, j).Interior.Color = RGB(255, 255, 255) Then ' Si hay una celda blanca, no está completa
+            If Cells(i, j).Interior.Color = RGB(255, 255, 255) Then
                 esCompleta = False
                 Exit For
             End If
         Next j
 
+        ' Si la línea está completa, la borramos y movemos las demás
         If esCompleta Then
-            totalLineas = totalLineas + 1 ' Incrementar líneas desbloqueadas
-            EliminarLinea i
-            i = i + 1 ' Reevalúa la fila actual después de desplazar todo hacia abajo
+            For j = 1 To 10
+                Cells(i, j).Interior.Color = RGB(255, 255, 255) ' Limpiar la línea
+            Next j
+
+            ' Mover todas las piezas encima una fila hacia abajo
+            For k = i To 2 Step -1
+                For j = 1 To 10
+                    If Cells(k - 1, j).Interior.Color <> RGB(255, 255, 255) Then
+                        Cells(k, j).Interior.Color = Cells(k - 1, j).Interior.Color
+                        Cells(k - 1, j).Interior.Color = RGB(255, 255, 255)
+                    End If
+                Next j
+            Next k
+
+            ' Aumentar el contador de líneas
+            totalLineas = totalLineas + 1
+            ActualizarEstadisticas
         End If
     Next i
-    ActualizarEstadisticas
-End Sub
-
-Sub EliminarLinea(ByVal fila As Integer)
-    Dim j As Integer
-
-    ' Mover todas las filas hacia abajo
-    For i = fila To 2 Step -1
-        For j = 1 To 10
-            Cells(i, j).Interior.Color = Cells(i - 1, j).Interior.Color
-        Next j
-    Next i
-
-    ' Limpiar la primera fila
-    For j = 1 To 10
-        Cells(1, j).Interior.Color = RGB(255, 255, 255) ' Blanco
-    Next j
 End Sub
 
 Sub ActualizarEstadisticas()
-    ' Mostrar estadísticas de líneas y piezas en el tablero
-    Cells(22, 1).Value = "Piezas: " & totalPiezas
-    Cells(22, 2).Value = "Líneas: " & totalLineas
+    ' Muestra las estadísticas (líneas eliminadas)
+    Range("K1").Value = "Líneas eliminadas: " & totalLineas
+    Range("K1").Font.Color = RGB(255, 255, 255)
+    Range("K1").Font.Size = 14
+    Range("K1").Interior.Color = RGB(0, 0, 0)
 End Sub
