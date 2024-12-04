@@ -30,23 +30,6 @@ Sub LimpiarTablero()
     Next i
 End Sub
 
-Sub EliminarLineas()
-    Dim i As Integer, j As Integer, completa As Boolean
-    For i = 20 To 1 Step -1
-        completa = True
-        For j = 1 To 10
-            If Cells(i, j).Interior.Color = RGB(255, 255, 255) Then ' Blanco
-                completa = False
-                Exit For
-            End If
-        Next j
-        If completa Then
-            Rows(i).Delete
-            Rows(1).Insert
-        End If
-    Next i
-End Sub
-
 Function Colision(ByVal pieza As Variant, ByVal x As Integer, ByVal y As Integer) As Boolean
     Dim i As Integer, j As Integer
     For i = LBound(pieza) To UBound(pieza)
@@ -62,33 +45,6 @@ Function Colision(ByVal pieza As Variant, ByVal x As Integer, ByVal y As Integer
     Colision = False
 End Function
 
-Sub AsignarTeclas()
-    Application.OnKey "{LEFT}", "MoverIzquierda"
-    Application.OnKey "{RIGHT}", "MoverDerecha"
-    Application.OnKey "{DOWN}", "MoverAbajo"
-    Application.OnKey "{UP}", "RotarPieza"
-End Sub
-
-Sub MoverIzquierda()
-    ' Lógica para mover la pieza a la izquierda
-    MsgBox "Mover izquierda (implementa lógica)"
-End Sub
-
-Sub MoverDerecha()
-    ' Lógica para mover la pieza a la derecha
-    MsgBox "Mover derecha (implementa lógica)"
-End Sub
-
-Sub MoverAbajo()
-    ' Lógica para bajar la pieza
-    MsgBox "Mover abajo (implementa lógica)"
-End Sub
-
-Sub RotarPieza()
-    ' Lógica para rotar la pieza
-    MsgBox "Rotar pieza (implementa lógica)"
-End Sub
-
 Sub IniciarJuego()
     Dim piezaActual As Variant
     Dim x As Integer, y As Integer
@@ -99,13 +55,21 @@ Sub IniciarJuego()
 
     ' Genera la primera pieza
     Randomize
-    Set piezaActual = piezas(Int(Rnd * 7))
+    piezaActual = piezas(Int(Rnd * 7))
     x = 5
     y = 1
 
-    ' Muestra la próxima pieza
-    Set siguientePieza = piezas(Int(Rnd * 7))
-    DibujarPieza siguientePieza, 12, 1
+    ' Dibuja la primera pieza
+    If Not Colision(piezaActual, x, y) Then
+        DibujarPieza piezaActual, x, y
+    Else
+        MsgBox "Game Over"
+        Exit Sub
+    End If
+
+    ' Genera la próxima pieza (opcional)
+    siguientePieza = piezas(Int(Rnd * 7))
+    ' Puedes dibujar la próxima pieza en otra ubicación si deseas
 
     MsgBox "Juego iniciado. Usa las teclas para mover la pieza."
 End Sub
