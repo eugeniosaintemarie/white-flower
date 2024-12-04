@@ -45,26 +45,34 @@ Sub GenerarPieza()
     ' Dependiendo del tipo de pieza
     Select Case piezaTipo
         Case 1 ' I
-            piezas = Array( _
-                Array(True, True, True, True), _
-                Array(False, False, False, False), _
-                Array(False, False, False, False), _
-                Array(False, False, False, False) _
-            )
+            ' Asignar la pieza I
+            For i = 1 To 4
+                For j = 1 To 4
+                    piezas(i, j) = False
+                Next j
+            Next i
+            piezas(1, 1) = True
+            piezas(1, 2) = True
+            piezas(1, 3) = True
+            piezas(1, 4) = True
         Case 2 ' O
-            piezas = Array( _
-                Array(True, True, False, False), _
-                Array(True, True, False, False), _
-                Array(False, False, False, False), _
-                Array(False, False, False, False) _
-            )
+            ' Asignar la pieza O
+            For i = 1 To 4
+                For j = 1 To 4
+                    piezas(i, j) = False
+                Next j
+            Next i
+            piezas(1, 1) = True
+            piezas(1, 2) = True
+            piezas(2, 1) = True
+            piezas(2, 2) = True
         ' Agregar más piezas aquí (T, L, J, S, Z, etc.)
     End Select
 
     ' Asignar la pieza actual
     For i = 1 To 4
         For j = 1 To 4
-            piezaActual(i, j) = piezas(i)(j)
+            piezaActual(i, j) = piezas(i, j)
         Next j
     Next i
 End Sub
