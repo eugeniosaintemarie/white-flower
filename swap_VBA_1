@@ -1,4 +1,8 @@
 Dim piezas(6) As Variant
+Dim piezaActual As Variant
+Dim siguientePieza As Variant
+Dim x As Integer, y As Integer
+Dim timerActivo As Boolean
 
 Sub ConfigurarPiezas()
     piezas(0) = Array(Array(1, 1, 1, 1)) ' Línea
@@ -10,22 +14,41 @@ Sub ConfigurarPiezas()
     piezas(6) = Array(Array(0, 0, 1), Array(1, 1, 1)) ' L invertida
 End Sub
 
-Sub DibujarPieza(ByVal pieza As Variant, ByVal x As Integer, ByVal y As Integer)
+Sub DibujarPieza(ByVal pieza As Variant, ByVal x As Integer, ByVal y As Integer, Optional limpiar As Boolean = False)
     Dim i As Integer, j As Integer
+    Dim color As Long
+    If limpiar Then
+        color = RGB(255, 255, 255) ' Blanco para limpiar
+    Else
+        color = RGB(0, 255, 0) ' Verde
+    End If
     For i = LBound(pieza) To UBound(pieza)
         For j = LBound(pieza(i)) To UBound(pieza(i))
             If pieza(i)(j) = 1 Then
-                Cells(y + i, x + j).Interior.Color = RGB(0, 255, 0) ' Verde
+                Cells(y + i, x + j).Interior.Color = color
             End If
         Next j
     Next i
 End Sub
 
-Sub LimpiarTablero()
+Sub DibujarProximaPieza()
     Dim i As Integer, j As Integer
-    For i = 1 To 20
-        For j = 1 To 10
-            Cells(i, j).Interior.Color = RGB(255, 255, 255) ' Blanco
+    Dim inicioX As Integer: inicioX = 12 ' Columna L
+    Dim inicioY As Integer: inicioY = 2 ' Fila 2
+
+    ' Limpiar área
+    For i = 0 To 3
+        For j = 0 To 3
+            Cells(inicioY + i, inicioX + j).Interior.Color = RGB(255, 255, 255) ' Blanco
+        Next j
+    Next i
+
+    ' Dibujar la próxima pieza
+    For i = LBound(siguientePieza) To UBound(siguientePieza)
+        For j = LBound(siguientePieza(i)) To UBound(siguientePieza(i))
+            If siguientePieza(i)(j) = 1 Then
+                Cells(inicioY + i, inicioX + j).Interior.Color = RGB(0, 0, 255) ' Azul
+            End If
         Next j
     Next i
 End Sub
@@ -45,31 +68,64 @@ Function Colision(ByVal pieza As Variant, ByVal x As Integer, ByVal y As Integer
     Colision = False
 End Function
 
-Sub IniciarJuego()
-    Dim piezaActual As Variant
-    Dim x As Integer, y As Integer
-    Dim siguientePieza As Variant
+Sub MoverPieza(ByVal direccion As String)
+    DibujarPieza piezaActual, x, y, True ' Limpiar la pieza actual
+    Select Case direccion
+        Case "izquierda"
+            If Not Colision(piezaActual, x - 1, y) Then x = x - 1
+        Case "derecha"
+            If Not Colision(piezaActual, x + 1, y) Then x = x + 1
+        Case "abajo"
+            If Not Colision(piezaActual, x, y + 1) Then y = y + 1 Else EndGame
+    End Select
+    DibujarPieza piezaActual, x, y ' Dibujar la pieza en la nueva posición
+End Sub
 
+Sub EndGame()
+    timerActivo = False
+    MsgBox "Game Over"
+    End
+End Sub
+
+Sub IniciarJuego()
+    Dim i As Integer
     Call ConfigurarPiezas
     Call LimpiarTablero
-
-    ' Genera la primera pieza
     Randomize
+
+    ' Inicializar la primera pieza
     piezaActual = piezas(Int(Rnd * 7))
-    x = 5
-    y = 1
-
-    ' Dibuja la primera pieza
-    If Not Colision(piezaActual, x, y) Then
-        DibujarPieza piezaActual, x, y
-    Else
-        MsgBox "Game Over"
-        Exit Sub
-    End If
-
-    ' Genera la próxima pieza (opcional)
     siguientePieza = piezas(Int(Rnd * 7))
-    ' Puedes dibujar la próxima pieza en otra ubicación si deseas
+    x = 4: y = 1
+    DibujarPieza piezaActual, x, y
+    DibujarProximaPieza
 
-    MsgBox "Juego iniciado. Usa las teclas para mover la pieza."
+    timerActivo = True
+    Application.OnTime Now + TimeValue("00:00:01"), "BajarPieza"
+End Sub
+
+Sub BajarPieza()
+    If timerActivo Then
+        MoverPieza "abajo"
+        Application.OnTime Now + TimeValue("00:00:01"), "BajarPieza"
+    End If
+End Sub
+
+Sub LimpiarTablero()
+    Dim i As Integer, j As Integer
+    For i = 1 To 20
+        For j = 1 To 10
+            Cells(i, j).Interior.Color = RGB(255, 255, 255) ' Blanco
+        Next j
+    Next i
+End Sub
+
+Sub KeyDown()
+    Dim keyCode As String
+    keyCode = Application.InputBox("Ingresa una tecla (a = izquierda, d = derecha, s = abajo):", "Control", Type:=2)
+    Select Case keyCode
+        Case "a": MoverPieza "izquierda"
+        Case "d": MoverPieza "derecha"
+        Case "s": MoverPieza "abajo"
+    End Select
 End Sub
