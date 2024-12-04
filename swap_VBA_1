@@ -1,219 +1,186 @@
-Dim piezas(1 To 4, 1 To 4) As Boolean
-Dim piezaActual(1 To 4, 1 To 4) As Boolean
 Dim fila As Integer
 Dim columna As Integer
-Dim totalLineas As Integer
+Dim piezaActual(1 To 4, 1 To 4) As Boolean
 Dim juegoActivo As Boolean
+Dim totalLineas As Integer
 
 Sub IniciarJuego()
-    ' Inicialización de variables
+    ' Inicializamos el juego y las variables
     fila = 1
     columna = 5
     totalLineas = 0
     juegoActivo = True
-    ' Limpiar pantalla
-    Cells.Clear
-    ' Establecer bordes visibles
-    With Range("A1:J20")
-        .Borders(xlEdgeBottom).LineStyle = xlContinuous
-        .Borders(xlEdgeRight).LineStyle = xlContinuous
-    End With
-    ' Generar la pieza inicial
     GenerarPieza
-    ' Mostrar estadísticas
-    ActualizarEstadisticas
-    ' Iniciar el ciclo de movimiento de la pieza
+    MoverPieza
+    AsignarTeclas
     LlamarMoverPieza
-End Sub
-
-Sub LlamarMoverPieza()
-    ' Movimiento de la pieza cada 0.5 segundos
-    On Error Resume Next
-    Do While juegoActivo
-        If Not MoverPieza Then Exit Do
-        VerificarLineas
-        ActualizarEstadisticas
-        Application.Wait (Now + TimeValue("0:00:01"))
-    Loop
-    MsgBox "Game Over! Puntuación: " & totalLineas
+    ActualizarEstadisticas
 End Sub
 
 Sub GenerarPieza()
-    ' Definir una pieza aleatoria
+    ' Genera una nueva pieza aleatoria
     Dim i As Integer, j As Integer
-    Dim piezaTipo As Integer
-    piezaTipo = Int(Rnd * 7) + 1 ' Aleatorio entre 1 y 7
-    
-    ' Limpiar pieza actual
+    ' Limpiar la pieza actual
     For i = 1 To 4
         For j = 1 To 4
             piezaActual(i, j) = False
         Next j
     Next i
     
-    ' Dependiendo del tipo de pieza
-    Select Case piezaTipo
-        Case 1 ' I
-            piezaActual(1, 1) = True
-            piezaActual(1, 2) = True
-            piezaActual(1, 3) = True
-            piezaActual(1, 4) = True
-        Case 2 ' O
-            piezaActual(1, 1) = True
-            piezaActual(1, 2) = True
-            piezaActual(2, 1) = True
-            piezaActual(2, 2) = True
-        Case 3 ' T
-            piezaActual(1, 2) = True
-            piezaActual(2, 1) = True
-            piezaActual(2, 2) = True
-            piezaActual(3, 2) = True
-        Case 4 ' L
-            piezaActual(1, 2) = True
-            piezaActual(2, 2) = True
-            piezaActual(3, 2) = True
-            piezaActual(3, 1) = True
-        Case 5 ' J
-            piezaActual(1, 2) = True
-            piezaActual(2, 2) = True
-            piezaActual(3, 2) = True
-            piezaActual(3, 3) = True
-        Case 6 ' Z
-            piezaActual(1, 2) = True
-            piezaActual(2, 2) = True
-            piezaActual(2, 1) = True
-            piezaActual(3, 1) = True
-        Case 7 ' S
-            piezaActual(1, 1) = True
-            piezaActual(1, 2) = True
-            piezaActual(2, 2) = True
-            piezaActual(2, 3) = True
-    End Select
+    ' Definir una pieza en forma de "T" (puedes agregar más formas aquí)
+    piezaActual(1, 2) = True
+    piezaActual(2, 1) = True
+    piezaActual(2, 2) = True
+    piezaActual(2, 3) = True
 End Sub
 
-Function MoverPieza() As Boolean
-    ' Verificar si la pieza puede moverse hacia abajo
+Sub MoverPieza()
+    ' Borra la pieza de su ubicación actual en la cuadrícula
     Dim i As Integer, j As Integer
-    Dim puedeMover As Boolean
-    puedeMover = True
-
-    ' Verificar si la pieza se mueve sin colisiones
     For i = 1 To 4
         For j = 1 To 4
             If piezaActual(i, j) Then
-                If fila + i > 20 Or columna + j > 10 Or columna + j < 1 Then
-                    puedeMover = False
-                End If
-                If fila + i > 20 Then
-                    puedeMover = False ' Colisión con el fondo
+                Cells(fila + i - 1, columna + j - 1).Interior.ColorIndex = -4142 ' Vuelve a color normal
+            End If
+        Next j
+    Next i
+    
+    ' Dibuja la pieza en su nueva ubicación
+    For i = 1 To 4
+        For j = 1 To 4
+            If piezaActual(i, j) Then
+                Cells(fila + i - 1, columna + j - 1).Interior.Color = RGB(0, 255, 0) ' Color verde
+            End If
+        Next j
+    Next i
+End Sub
+
+Sub AsignarTeclas()
+    ' Asignar teclas para mover y rotar la pieza
+    Application.OnKey "^({UP})", "Rotar" ' Tecla Control + Flecha Arriba
+    Application.OnKey "({RIGHT})", "MoverDerecha" ' Flecha Derecha
+    Application.OnKey "({LEFT})", "MoverIzquierda" ' Flecha Izquierda
+    Application.OnKey "({DOWN})", "MoverAbajo" ' Flecha Abajo
+    Application.OnKey "^({ESC})", "FinalizarJuego" ' Tecla Escape
+End Sub
+
+Sub MoverDerecha()
+    If PuedeMoverPieza(1, 0) Then
+        columna = columna + 1
+        MoverPieza
+    End If
+End Sub
+
+Sub MoverIzquierda()
+    If PuedeMoverPieza(-1, 0) Then
+        columna = columna - 1
+        MoverPieza
+    End If
+End Sub
+
+Sub MoverAbajo()
+    If PuedeMoverPieza(0, 1) Then
+        fila = fila + 1
+        MoverPieza
+    Else
+        FijarPieza
+        GenerarPieza
+        fila = 1
+        columna = 5
+    End If
+End Sub
+
+Sub Rotar()
+    Dim tempPieza(1 To 4, 1 To 4) As Boolean
+    Dim i As Integer, j As Integer
+    
+    ' Rotamos la pieza 90 grados
+    For i = 1 To 4
+        For j = 1 To 4
+            tempPieza(i, j) = piezaActual(5 - j, i)
+        Next j
+    Next i
+    
+    ' Comprobamos si la pieza rota puede caber en la cuadrícula
+    If PuedeMoverPieza(0, 0, tempPieza) Then
+        For i = 1 To 4
+            For j = 1 To 4
+                piezaActual(i, j) = tempPieza(i, j)
+            Next j
+        Next i
+        MoverPieza
+    End If
+End Sub
+
+Function PuedeMoverPieza(desplazamientoX As Integer, desplazamientoY As Integer, Optional nuevaPieza As Variant) As Boolean
+    If IsMissing(nuevaPieza) Then
+        nuevaPieza = piezaActual
+    End If
+    
+    Dim i As Integer, j As Integer
+    For i = 1 To 4
+        For j = 1 To 4
+            If nuevaPieza(i, j) Then
+                If Cells(fila + i + desplazamientoY - 1, columna + j + desplazamientoX - 1).Interior.ColorIndex <> -4142 Then
+                    PuedeMoverPieza = False
+                    Exit Function
                 End If
             End If
         Next j
     Next i
-
-    ' Si puede moverse, moverla
-    If puedeMover Then
-        ' Limpiar la posición anterior
-        For i = 1 To 4
-            For j = 1 To 4
-                If piezaActual(i, j) Then
-                    Cells(fila + i - 1, columna + j - 1).Interior.Color = RGB(255, 255, 255)
-                End If
-            Next j
-        Next i
-        
-        ' Mover la pieza hacia abajo
-        fila = fila + 1
-        
-        ' Dibujar la nueva posición
-        For i = 1 To 4
-            For j = 1 To 4
-                If piezaActual(i, j) Then
-                    Cells(fila + i - 1, columna + j - 1).Interior.Color = RGB(0, 255, 0)
-                End If
-            Next j
-        Next i
-        MoverPieza = True
-    Else
-        ' Si no puede moverse, guardar la pieza y generar una nueva
-        For i = 1 To 4
-            For j = 1 To 4
-                If piezaActual(i, j) Then
-                    Cells(fila + i - 1, columna + j - 1).Interior.Color = RGB(0, 255, 0)
-                End If
-            Next j
-        Next i
-        ' Aquí es donde el juego "termina" si no hay espacio para una nueva pieza
-        If fila = 1 Then
-            juegoActivo = False ' No puede generar una nueva pieza
-            Exit Function
-        End If
-        GenerarPieza
-        fila = 1
-        columna = 5
-        MoverPieza = True
-    End If
+    PuedeMoverPieza = True
 End Function
+
+Sub FijarPieza()
+    ' Fija la pieza en la cuadrícula
+    Dim i As Integer, j As Integer
+    For i = 1 To 4
+        For j = 1 To 4
+            If piezaActual(i, j) Then
+                Cells(fila + i - 1, columna + j - 1).Interior.Color = RGB(0, 255, 0) ' Color de la pieza
+            End If
+        Next j
+    Next i
+End Sub
 
 Sub VerificarLineas()
     Dim i As Integer, j As Integer
-    Dim esCompleta As Boolean
-
-    ' Verificar si alguna línea está completa
+    Dim lineaCompleta As Boolean
     For i = 1 To 20
-        esCompleta = True
+        lineaCompleta = True
         For j = 1 To 10
-            If Cells(i, j).Interior.Color = RGB(255, 255, 255) Then
-                esCompleta = False
+            If Cells(i, j).Interior.ColorIndex = -4142 Then
+                lineaCompleta = False
                 Exit For
             End If
         Next j
-
-        ' Si la línea está completa, la borramos y movemos las demás
-        If esCompleta Then
-            For j = 1 To 10
-                Cells(i, j).Interior.Color = RGB(255, 255, 255) ' Limpiar la línea
-            Next j
-
-            ' Mover todas las piezas encima una fila hacia abajo
-            For k = i To 2 Step -1
-                For j = 1 To 10
-                    If Cells(k - 1, j).Interior.Color <> RGB(255, 255, 255) Then
-                        Cells(k, j).Interior.Color = Cells(k - 1, j).Interior.Color
-                        Cells(k - 1, j).Interior.Color = RGB(255, 255, 255)
-                    End If
-                Next j
-            Next k
-
-            ' Aumentar el contador de líneas
+        If lineaCompleta Then
+            BorrarLinea(i)
             totalLineas = totalLineas + 1
+            ActualizarEstadisticas
         End If
+    Next i
+End Sub
+
+Sub BorrarLinea(linea As Integer)
+    Dim i As Integer, j As Integer
+    For j = 1 To 10
+        Cells(linea, j).Interior.ColorIndex = -4142 ' Borrar la línea
+    Next j
+    ' Bajar las líneas superiores
+    For i = linea To 2 Step -1
+        For j = 1 To 10
+            Cells(i, j).Interior.Color = Cells(i - 1, j).Interior.Color
+        Next j
     Next i
 End Sub
 
 Sub ActualizarEstadisticas()
-    ' Muestra las estadísticas (líneas eliminadas)
-    Range("K1").Value = "Líneas eliminadas: " & totalLineas
-    Range("K1").Font.Color = RGB(255, 255, 255)
-    Range("K1").Font.Size = 14
-    Range("K1").Interior.Color = RGB(0, 0, 0)
+    ' Muestra la cantidad de líneas completadas
+    Cells(22, 1).Value = "Líneas: " & totalLineas
 End Sub
 
-Sub Rotar()
-    ' Rotar la pieza actual
-    Dim nuevaPieza(1 To 4, 1 To 4) As Boolean
-    Dim i As Integer, j As Integer
-
-    ' Rotar la pieza 90 grados (transposición)
-    For i = 1 To 4
-        For j = 1 To 4
-            nuevaPieza(i, j) = piezaActual(4 - j + 1, i)
-        Next j
-    Next i
-
-    ' Verificar si la pieza rota colisiona
-    If PuedeMoverPieza(nuevaPieza) Then
-        piezaActual = nuevaPieza
-        MoverPieza
-    End If
-End
+Sub FinalizarJuego()
+    juegoActivo = False
+    MsgBox "Juego Terminado"
+End Sub
