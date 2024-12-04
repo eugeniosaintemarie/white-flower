@@ -4,6 +4,7 @@ Dim piezaActual(1 To 4, 1 To 4) As Boolean
 Dim juegoActivo As Boolean
 Dim totalLineas As Integer
 Dim tiempo As Double
+Dim teclas As String ' Variable para detectar teclas presionadas
 
 Sub IniciarJuego()
     ' Inicializamos el juego y las variables
@@ -11,9 +12,9 @@ Sub IniciarJuego()
     columna = 5
     totalLineas = 0
     juegoActivo = True
+    teclas = ""
     GenerarPieza
     MoverPieza
-    AsignarTeclas
     tiempo = Now
     LlamarMoverPieza
     ActualizarEstadisticas
@@ -57,13 +58,46 @@ Sub MoverPieza()
     Next i
 End Sub
 
+Sub LlamarMoverPieza()
+    If juegoActivo Then
+        ' Llamar a MoverAbajo cada 1 segundo
+        If Now - tiempo >= TimeValue("00:00:01") Then
+            tiempo = Now
+            MoverAbajo
+        End If
+        ' Comprobar teclas presionadas
+        If teclas = "LEFT" Then MoverIzquierda
+        If teclas = "RIGHT" Then MoverDerecha
+        If teclas = "DOWN" Then MoverAbajo
+        If teclas = "UP" Then Rotar
+        teclas = "" ' Limpiar la tecla presionada
+        Application.OnTime Now + TimeValue("00:00:01"), "LlamarMoverPieza"
+    End If
+End Sub
+
 Sub AsignarTeclas()
-    ' Asignar teclas para mover y rotar la pieza
-    Application.OnKey "^({UP})", "Rotar" ' Tecla Control + Flecha Arriba
-    Application.OnKey "({RIGHT})", "MoverDerecha" ' Flecha Derecha
-    Application.OnKey "({LEFT})", "MoverIzquierda" ' Flecha Izquierda
-    Application.OnKey "({DOWN})", "MoverAbajo" ' Flecha Abajo
-    Application.OnKey "^({ESC})", "FinalizarJuego" ' Tecla Escape
+    ' Asignar las teclas de movimiento en un evento de temporizador.
+    Application.OnKey "^({UP})", "TeclaArriba"
+    Application.OnKey "^({RIGHT})", "TeclaDerecha"
+    Application.OnKey "^({LEFT})", "TeclaIzquierda"
+    Application.OnKey "^({DOWN})", "TeclaAbajo"
+    Application.OnKey "^({ESC})", "FinalizarJuego" ' Escape para finalizar
+End Sub
+
+Sub TeclaIzquierda()
+    teclas = "LEFT"
+End Sub
+
+Sub TeclaDerecha()
+    teclas = "RIGHT"
+End Sub
+
+Sub TeclaAbajo()
+    teclas = "DOWN"
+End Sub
+
+Sub TeclaArriba()
+    teclas = "UP"
 End Sub
 
 Sub MoverDerecha()
@@ -186,15 +220,4 @@ End Sub
 Sub FinalizarJuego()
     juegoActivo = False
     MsgBox "Juego Terminado"
-End Sub
-
-Sub LlamarMoverPieza()
-    If juegoActivo Then
-        ' Llamar a MoverAbajo cada 1 segundo
-        If Now - tiempo >= TimeValue("00:00:01") Then
-            tiempo = Now
-            MoverAbajo
-        End If
-        Application.OnTime Now + TimeValue("00:00:01"), "LlamarMoverPieza"
-    End If
 End Sub
