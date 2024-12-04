@@ -1,1 +1,111 @@
+Dim piezas(6) As Variant
 
+Sub ConfigurarPiezas()
+    piezas(0) = Array(Array(1, 1, 1, 1)) ' Línea
+    piezas(1) = Array(Array(1, 1), Array(1, 1)) ' Cuadrado
+    piezas(2) = Array(Array(0, 1, 0), Array(1, 1, 1)) ' T
+    piezas(3) = Array(Array(1, 1, 0), Array(0, 1, 1)) ' Z
+    piezas(4) = Array(Array(0, 1, 1), Array(1, 1, 0)) ' S
+    piezas(5) = Array(Array(1, 0, 0), Array(1, 1, 1)) ' L
+    piezas(6) = Array(Array(0, 0, 1), Array(1, 1, 1)) ' L invertida
+End Sub
+
+Sub DibujarPieza(ByVal pieza As Variant, ByVal x As Integer, ByVal y As Integer)
+    Dim i As Integer, j As Integer
+    For i = LBound(pieza) To UBound(pieza)
+        For j = LBound(pieza(i)) To UBound(pieza(i))
+            If pieza(i)(j) = 1 Then
+                Cells(y + i, x + j).Interior.Color = RGB(0, 255, 0) ' Verde
+            End If
+        Next j
+    Next i
+End Sub
+
+Sub LimpiarTablero()
+    Dim i As Integer, j As Integer
+    For i = 1 To 20
+        For j = 1 To 10
+            Cells(i, j).Interior.Color = RGB(255, 255, 255) ' Blanco
+        Next j
+    Next i
+End Sub
+
+Sub EliminarLineas()
+    Dim i As Integer, j As Integer, completa As Boolean
+    For i = 20 To 1 Step -1
+        completa = True
+        For j = 1 To 10
+            If Cells(i, j).Interior.Color = RGB(255, 255, 255) Then ' Blanco
+                completa = False
+                Exit For
+            End If
+        Next j
+        If completa Then
+            Rows(i).Delete
+            Rows(1).Insert
+        End If
+    Next i
+End Sub
+
+Function Colision(ByVal pieza As Variant, ByVal x As Integer, ByVal y As Integer) As Boolean
+    Dim i As Integer, j As Integer
+    For i = LBound(pieza) To UBound(pieza)
+        For j = LBound(pieza(i)) To UBound(pieza(i))
+            If pieza(i)(j) = 1 Then
+                If y + i > 20 Or x + j < 1 Or x + j > 10 Or Cells(y + i, x + j).Interior.Color <> RGB(255, 255, 255) Then
+                    Colision = True
+                    Exit Function
+                End If
+            End If
+        Next j
+    Next i
+    Colision = False
+End Function
+
+Sub AsignarTeclas()
+    Application.OnKey "{LEFT}", "MoverIzquierda"
+    Application.OnKey "{RIGHT}", "MoverDerecha"
+    Application.OnKey "{DOWN}", "MoverAbajo"
+    Application.OnKey "{UP}", "RotarPieza"
+End Sub
+
+Sub MoverIzquierda()
+    ' Lógica para mover la pieza a la izquierda
+    MsgBox "Mover izquierda (implementa lógica)"
+End Sub
+
+Sub MoverDerecha()
+    ' Lógica para mover la pieza a la derecha
+    MsgBox "Mover derecha (implementa lógica)"
+End Sub
+
+Sub MoverAbajo()
+    ' Lógica para bajar la pieza
+    MsgBox "Mover abajo (implementa lógica)"
+End Sub
+
+Sub RotarPieza()
+    ' Lógica para rotar la pieza
+    MsgBox "Rotar pieza (implementa lógica)"
+End Sub
+
+Sub IniciarJuego()
+    Dim piezaActual As Variant
+    Dim x As Integer, y As Integer
+    Dim siguientePieza As Variant
+
+    Call ConfigurarPiezas
+    Call LimpiarTablero
+
+    ' Genera la primera pieza
+    Randomize
+    Set piezaActual = piezas(Int(Rnd * 7))
+    x = 5
+    y = 1
+
+    ' Muestra la próxima pieza
+    Set siguientePieza = piezas(Int(Rnd * 7))
+    DibujarPieza siguientePieza, 12, 1
+
+    MsgBox "Juego iniciado. Usa las teclas para mover la pieza."
+End Sub
