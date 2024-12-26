@@ -1,1 +1,34 @@
+import os
 
+# Rutas de las carpetas
+carpeta_1 = input("Ingresa la ruta de la carpeta con archivos CUIL y número: ")
+carpeta_2 = input("Ingresa la ruta de la carpeta con archivos CUIL: ")
+
+# Función para extraer el CUIL del nombre del archivo
+def extraer_cuil(nombre_archivo):
+    return nombre_archivo.split('.')[0].split('_')[0]  # Asume formato "CUIL_numero.pdf"
+
+# Leer archivos de ambas carpetas
+archivos_carpeta_1 = os.listdir(carpeta_1)
+archivos_carpeta_2 = os.listdir(carpeta_2)
+
+# Crear un diccionario para asociar CUIL con número adicional
+mapa_cuil_numero = {}
+
+for archivo in archivos_carpeta_1:
+    if archivo.endswith(".pdf"):
+        cuil, _, numero = archivo.partition('_')
+        mapa_cuil_numero[cuil] = numero.split('.')[0]  # Guardar solo el número
+
+# Renombrar archivos de la segunda carpeta
+for archivo in archivos_carpeta_2:
+    if archivo.endswith(".pdf"):
+        cuil = extraer_cuil(archivo)
+        if cuil in mapa_cuil_numero:
+            nuevo_nombre = f"{cuil}_{mapa_cuil_numero[cuil]}.pdf"
+            ruta_actual = os.path.join(carpeta_2, archivo)
+            nueva_ruta = os.path.join(carpeta_2, nuevo_nombre)
+            os.rename(ruta_actual, nueva_ruta)
+            print(f"Renombrado: {archivo} -> {nuevo_nombre}")
+
+print("Renombrado completado.")
