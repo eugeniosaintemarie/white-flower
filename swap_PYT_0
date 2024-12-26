@@ -1,32 +1,33 @@
 import os
 
 # Rutas de las carpetas
-ubicacion_1 = input("Ingresa la ruta de la carpeta 1 (con CUIL y números): ")
-ubicacion_2 = input("Ingresa la ruta de la carpeta 2 (solo CUIL): ")
+ubicacion_1 = input("Ingresa la ruta de la carpeta 1 (con formato extendido): ")
+ubicacion_2 = input("Ingresa la ruta de la carpeta 2 (con solo el QUIL): ")
 
-# Función para obtener la información del nombre del archivo
-def obtener_datos_nombre(nombre_archivo):
+# Función para dividir el nombre del archivo de la ubicación 1
+def procesar_archivo_ubicacion_1(nombre_archivo):
     partes = nombre_archivo.split('_')
-    cuil = partes[0] if '-' in partes[0] else partes[0].split('.')[0]
-    datos_adicionales = "_".join(partes[1:]).replace('.pdf', '') if len(partes) > 1 else ''
-    return cuil, datos_adicionales
+    primeros_7 = partes[0]  # Los primeros 7 dígitos
+    numero_40 = partes[1]  # El número 40
+    cuil = partes[2].replace('.pdf', '')  # El CUIL
+    return cuil, f"{primeros_7}_{numero_40}"
 
-# Leer archivos de ambas carpetas
+# Leer los archivos de ambas carpetas
 archivos_ubicacion_1 = [f for f in os.listdir(ubicacion_1) if f.endswith('.pdf')]
 archivos_ubicacion_2 = [f for f in os.listdir(ubicacion_2) if f.endswith('.pdf')]
 
-# Crear un mapa de CUIL a datos adicionales desde la ubicación 1
-mapa_cuil_datos = {}
+# Crear un mapa CUIL -> primeros_7 y número_40 desde la ubicación 1
+mapa_cuil_prefijos = {}
 
 for archivo in archivos_ubicacion_1:
-    cuil, datos_adicionales = obtener_datos_nombre(archivo)
-    mapa_cuil_datos[cuil] = datos_adicionales
+    cuil, prefijo = procesar_archivo_ubicacion_1(archivo)
+    mapa_cuil_prefijos[cuil] = prefijo
 
 # Renombrar archivos en la ubicación 2
 for archivo in archivos_ubicacion_2:
-    cuil, _ = obtener_datos_nombre(archivo)
-    if cuil in mapa_cuil_datos:
-        nuevo_nombre = f"{cuil}_{mapa_cuil_datos[cuil]}.pdf"
+    cuil = archivo.replace('.pdf', '')  # Extraer el CUIL
+    if cuil in mapa_cuil_prefijos:
+        nuevo_nombre = f"{mapa_cuil_prefijos[cuil]}_{cuil}.pdf"
         ruta_actual = os.path.join(ubicacion_2, archivo)
         nueva_ruta = os.path.join(ubicacion_2, nuevo_nombre)
         os.rename(ruta_actual, nueva_ruta)
