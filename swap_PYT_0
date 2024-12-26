@@ -1,34 +1,35 @@
 import os
 
 # Rutas de las carpetas
-carpeta_1 = input("Ingresa la ruta de la carpeta con archivos CUIL y número: ")
-carpeta_2 = input("Ingresa la ruta de la carpeta con archivos CUIL: ")
+ubicacion_1 = input("Ingresa la ruta de la carpeta 1 (con CUIL y números): ")
+ubicacion_2 = input("Ingresa la ruta de la carpeta 2 (solo CUIL): ")
 
-# Función para extraer el CUIL del nombre del archivo
-def extraer_cuil(nombre_archivo):
-    return nombre_archivo.split('.')[0].split('_')[0]  # Asume formato "CUIL_numero.pdf"
+# Función para obtener la información del nombre del archivo
+def obtener_datos_nombre(nombre_archivo):
+    partes = nombre_archivo.split('_')
+    cuil = partes[0] if '-' in partes[0] else partes[0].split('.')[0]
+    datos_adicionales = "_".join(partes[1:]).replace('.pdf', '') if len(partes) > 1 else ''
+    return cuil, datos_adicionales
 
 # Leer archivos de ambas carpetas
-archivos_carpeta_1 = os.listdir(carpeta_1)
-archivos_carpeta_2 = os.listdir(carpeta_2)
+archivos_ubicacion_1 = [f for f in os.listdir(ubicacion_1) if f.endswith('.pdf')]
+archivos_ubicacion_2 = [f for f in os.listdir(ubicacion_2) if f.endswith('.pdf')]
 
-# Crear un diccionario para asociar CUIL con número adicional
-mapa_cuil_numero = {}
+# Crear un mapa de CUIL a datos adicionales desde la ubicación 1
+mapa_cuil_datos = {}
 
-for archivo in archivos_carpeta_1:
-    if archivo.endswith(".pdf"):
-        cuil, _, numero = archivo.partition('_')
-        mapa_cuil_numero[cuil] = numero.split('.')[0]  # Guardar solo el número
+for archivo in archivos_ubicacion_1:
+    cuil, datos_adicionales = obtener_datos_nombre(archivo)
+    mapa_cuil_datos[cuil] = datos_adicionales
 
-# Renombrar archivos de la segunda carpeta
-for archivo in archivos_carpeta_2:
-    if archivo.endswith(".pdf"):
-        cuil = extraer_cuil(archivo)
-        if cuil in mapa_cuil_numero:
-            nuevo_nombre = f"{cuil}_{mapa_cuil_numero[cuil]}.pdf"
-            ruta_actual = os.path.join(carpeta_2, archivo)
-            nueva_ruta = os.path.join(carpeta_2, nuevo_nombre)
-            os.rename(ruta_actual, nueva_ruta)
-            print(f"Renombrado: {archivo} -> {nuevo_nombre}")
+# Renombrar archivos en la ubicación 2
+for archivo in archivos_ubicacion_2:
+    cuil, _ = obtener_datos_nombre(archivo)
+    if cuil in mapa_cuil_datos:
+        nuevo_nombre = f"{cuil}_{mapa_cuil_datos[cuil]}.pdf"
+        ruta_actual = os.path.join(ubicacion_2, archivo)
+        nueva_ruta = os.path.join(ubicacion_2, nuevo_nombre)
+        os.rename(ruta_actual, nueva_ruta)
+        print(f"Renombrado: {archivo} -> {nuevo_nombre}")
 
 print("Renombrado completado.")
