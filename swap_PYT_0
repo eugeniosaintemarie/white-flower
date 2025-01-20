@@ -1,36 +1,47 @@
 import os
+import shutil
+import pandas as pd
 
-# Rutas de las carpetas
-ubicacion_1 = input("Ingresa la ruta de la carpeta 1 (con formato extendido): ")
-ubicacion_2 = input("Ingresa la ruta de la carpeta 2 (con solo el QUIL): ")
+# Función principal
+def procesar_archivos(ruta_excel, columna_original, columna_nueva, ubicacion_busqueda, ubicacion_destino):
+    # Leer el Excel
+    try:
+        df = pd.read_excel(ruta_excel)
+    except Exception as e:
+        print(f"Error al leer el archivo Excel: {e}")
+        return
 
-# Función para dividir el nombre del archivo de la ubicación 1
-def procesar_archivo_ubicacion_1(nombre_archivo):
-    partes = nombre_archivo.split('_')
-    primeros_7 = partes[0]  # Los primeros 7 dígitos
-    numero_40 = partes[1]  # El número 40
-    cuil = partes[2].replace('.pdf', '')  # El CUIL
-    return cuil, f"{primeros_7}_{numero_40}"
+    # Iterar por las filas del Excel
+    for index, row in df.iterrows():
+        nombre_original = str(row[columna_original]).strip()
+        nombre_nuevo = str(row[columna_nueva]).strip()
+        
+        # Buscar archivos que coincidan en la ubicación de red
+        encontrado = False
+        for archivo in os.listdir(ubicacion_busqueda):
+            if nombre_original in archivo:
+                encontrado = True
+                extension = os.path.splitext(archivo)[1]
+                nombre_completo_original = os.path.join(ubicacion_busqueda, archivo)
+                nombre_completo_nuevo = os.path.join(ubicacion_destino, f"{nombre_nuevo}{extension}")
+                
+                # Mover y renombrar el archivo
+                try:
+                    shutil.move(nombre_completo_original, nombre_completo_nuevo)
+                    print(f"Archivo '{archivo}' renombrado a '{nombre_nuevo}{extension}' y movido a {ubicacion_destino}")
+                except Exception as e:
+                    print(f"Error al mover el archivo '{archivo}': {e}")
+                break
 
-# Leer los archivos de ambas carpetas
-archivos_ubicacion_1 = [f for f in os.listdir(ubicacion_1) if f.endswith('.pdf')]
-archivos_ubicacion_2 = [f for f in os.listdir(ubicacion_2) if f.endswith('.pdf')]
+        if not encontrado:
+            print(f"No se encontró ningún archivo con el nombre '{nombre_original}' en {ubicacion_busqueda}")
 
-# Crear un mapa CUIL -> primeros_7 y número_40 desde la ubicación 1
-mapa_cuil_prefijos = {}
+# Parámetros
+ruta_excel = input("Ingrese la ruta del archivo Excel: ").strip()
+columna_original = input("Ingrese el nombre de la columna con los nombres originales: ").strip()
+columna_nueva = input("Ingrese el nombre de la columna con los nombres nuevos: ").strip()
+ubicacion_busqueda = input("Ingrese la ubicación de red donde buscar los archivos: ").strip()
+ubicacion_destino = input("Ingrese la ubicación de red donde mover los archivos: ").strip()
 
-for archivo in archivos_ubicacion_1:
-    cuil, prefijo = procesar_archivo_ubicacion_1(archivo)
-    mapa_cuil_prefijos[cuil] = prefijo
-
-# Renombrar archivos en la ubicación 2
-for archivo in archivos_ubicacion_2:
-    cuil = archivo.replace('.pdf', '')  # Extraer el CUIL
-    if cuil in mapa_cuil_prefijos:
-        nuevo_nombre = f"{mapa_cuil_prefijos[cuil]}_{cuil}.pdf"
-        ruta_actual = os.path.join(ubicacion_2, archivo)
-        nueva_ruta = os.path.join(ubicacion_2, nuevo_nombre)
-        os.rename(ruta_actual, nueva_ruta)
-        print(f"Renombrado: {archivo} -> {nuevo_nombre}")
-
-print("Renombrado completado.")
+# Ejecutar
+procesar_archivos(ruta_excel, columna_original, columna_nueva, ubicacion_busqueda, ubicacion_destino)
