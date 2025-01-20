@@ -9,7 +9,7 @@ def procesar_archivos():
     indice_columna_original = 0  # Índice de la columna con los nombres originales (columna A = 0)
     indice_columna_nueva = 1  # Índice de la columna con los nuevos nombres (columna B = 1)
     ubicacion_busqueda = "C:/ruta/de/busqueda/"  # Carpeta donde buscar los archivos
-    ubicacion_destino = "C:/ruta/destino/"  # Carpeta donde mover los archivos
+    ubicacion_destino = "C:/ruta/destino/"  # Carpeta donde copiar los archivos
 
     # Leer el Excel omitiendo la cabecera
     try:
@@ -31,10 +31,10 @@ def procesar_archivos():
             ruta_nueva = os.path.join(ubicacion_destino, nombre_nuevo)
             
             try:
-                shutil.move(ruta_original, ruta_nueva)
-                print(f"Archivo '{nombre_original}' renombrado a '{nombre_nuevo}' y movido a {ubicacion_destino}")
+                shutil.copy(ruta_original, ruta_nueva)
+                print(f"Archivo '{nombre_original}' copiado y renombrado a '{nombre_nuevo}' en {ubicacion_destino}")
             except Exception as e:
-                print(f"Error al mover el archivo '{nombre_original}': {e}")
+                print(f"Error al copiar el archivo '{nombre_original}': {e}")
         else:
             print(f"No se encontró el archivo '{nombre_original}' en {ubicacion_busqueda}")
 
