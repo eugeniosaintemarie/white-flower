@@ -6,27 +6,22 @@ import pandas as pd
 def procesar_archivos():
     # Variables definidas
     ruta_excel = "C:/ruta/al/archivo.xlsx"  # Ruta completa al archivo Excel
-    nombre_columna_original = "Nombre Original"  # Nombre de la columna con los nombres originales
-    nombre_columna_nueva = "Nombre Nuevo"  # Nombre de la columna con los nombres nuevos
+    indice_columna_original = 0  # Índice de la columna con los nombres originales (columna A = 0)
+    indice_columna_nueva = 1  # Índice de la columna con los nuevos nombres (columna B = 1)
     ubicacion_busqueda = "C:/ruta/de/busqueda/"  # Carpeta donde buscar los archivos
     ubicacion_destino = "C:/ruta/destino/"  # Carpeta donde mover los archivos
 
     # Leer el Excel omitiendo la cabecera
     try:
-        df = pd.read_excel(ruta_excel)
+        df = pd.read_excel(ruta_excel, header=0, usecols=[indice_columna_original, indice_columna_nueva])
     except Exception as e:
         print(f"Error al leer el archivo Excel: {e}")
         return
 
-    # Validar si las columnas existen
-    if nombre_columna_original not in df.columns or nombre_columna_nueva not in df.columns:
-        print(f"El Excel no contiene las columnas '{nombre_columna_original}' o '{nombre_columna_nueva}'")
-        return
-
     # Iterar por las filas del Excel
     for index, row in df.iterrows():
-        nombre_original = str(row[nombre_columna_original]).strip()
-        nombre_nuevo = str(row[nombre_columna_nueva]).strip()
+        nombre_original = str(row[indice_columna_original]).strip()
+        nombre_nuevo = str(row[indice_columna_nueva]).strip()
         
         # Construir ruta completa del archivo original
         ruta_original = os.path.join(ubicacion_busqueda, nombre_original)
