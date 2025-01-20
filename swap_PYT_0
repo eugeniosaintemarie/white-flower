@@ -3,7 +3,14 @@ import shutil
 import pandas as pd
 
 # Función principal
-def procesar_archivos(ruta_excel, columna_original, columna_nueva, ubicacion_busqueda, ubicacion_destino):
+def procesar_archivos():
+    # Variables definidas
+    ruta_excel = "C:/ruta/al/archivo.xlsx"  # Ruta completa al archivo Excel
+    columna_original = "A"  # Columna con los nombres originales
+    columna_nueva = "B"  # Columna con los nombres nuevos
+    ubicacion_busqueda = "C:/ruta/de/busqueda/"  # Carpeta donde buscar los archivos
+    ubicacion_destino = "C:/ruta/destino/"  # Carpeta donde mover los archivos
+
     # Leer el Excel
     try:
         df = pd.read_excel(ruta_excel)
@@ -36,12 +43,5 @@ def procesar_archivos(ruta_excel, columna_original, columna_nueva, ubicacion_bus
         if not encontrado:
             print(f"No se encontró ningún archivo con el nombre '{nombre_original}' en {ubicacion_busqueda}")
 
-# Parámetros
-ruta_excel = input("Ingrese la ruta del archivo Excel: ").strip()
-columna_original = input("Ingrese el nombre de la columna con los nombres originales: ").strip()
-columna_nueva = input("Ingrese el nombre de la columna con los nombres nuevos: ").strip()
-ubicacion_busqueda = input("Ingrese la ubicación de red donde buscar los archivos: ").strip()
-ubicacion_destino = input("Ingrese la ubicación de red donde mover los archivos: ").strip()
-
 # Ejecutar
-procesar_archivos(ruta_excel, columna_original, columna_nueva, ubicacion_busqueda, ubicacion_destino)
+procesar_archivos()
