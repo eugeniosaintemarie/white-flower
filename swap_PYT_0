@@ -2,26 +2,25 @@ import os
 import shutil
 import pandas as pd
 
-# Función principal
 def procesar_archivos():
-    # Variables definidas
-    ruta_excel = "C:/ruta/al/archivo.xlsx"  # Ruta completa al archivo Excel
-    indice_columna_original = 0  # Índice de la columna con los nombres originales (columna A = 0)
-    indice_columna_nueva = 1  # Índice de la columna con los nuevos nombres (columna B = 1)
-    ubicacion_busqueda = "C:/ruta/de/busqueda/"  # Carpeta donde buscar los archivos
-    ubicacion_destino = "C:/ruta/destino/"  # Carpeta donde copiar los archivos
+    # Definimos las variables directamente dentro de la función
+    ruta_excel = r"C:/Users/45139328.GMAS/Desktop/TRX ATTACH LOG.xlsx"  # Ruta completa al archivo Excel
+    columna_original = 0  # Índice de la columna con los nombres originales (columna A = 0)
+    columna_nueva = 1  # Índice de la columna con los nuevos nombres (columna B = 1)
+    ubicacion_busqueda = r"\\AR1251F52229908\web_production\web_life\BOM\attach\CAN_40\PROD_20"  # Carpeta donde buscar los archivos
+    ubicacion_destino = r"C:/Users/45139328.GMAS/Desktop/151"  # Carpeta donde copiar los archivos
 
     # Leer el Excel omitiendo la cabecera
     try:
-        df = pd.read_excel(ruta_excel, header=0, usecols=[indice_columna_original, indice_columna_nueva])
+        df = pd.read_excel(ruta_excel, header=0, usecols=[columna_original, columna_nueva])
     except Exception as e:
         print(f"Error al leer el archivo Excel: {e}")
         return
 
     # Iterar por las filas del Excel
     for index, row in df.iterrows():
-        nombre_original = str(row[indice_columna_original]).strip()
-        nombre_nuevo = str(row[indice_columna_nueva]).strip()
+        nombre_original = str(row[columna_original]).strip()
+        nombre_nuevo = str(row[columna_nueva]).strip()
         
         # Construir ruta completa del archivo original
         ruta_original = os.path.join(ubicacion_busqueda, nombre_original)
@@ -38,5 +37,5 @@ def procesar_archivos():
         else:
             print(f"No se encontró el archivo '{nombre_original}' en {ubicacion_busqueda}")
 
-# Ejecutar
+# Ejecutar la función
 procesar_archivos()
