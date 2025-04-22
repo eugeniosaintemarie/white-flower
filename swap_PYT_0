@@ -1,1 +1,28 @@
+import os
 
+def renombrar_archivos():
+    directorio_actual = os.path.dirname(os.path.abspath(__file__))
+    archivos = [f for f in os.listdir(directorio_actual) if os.path.isfile(os.path.join(directorio_actual, f)) and f != os.path.basename(__file__)]
+    palabra_a_agregar = input("Texto a agregar: ")
+    ubicacion = input("Al principio(1) o al final(2)?: ")
+    if ubicacion not in ['1', '2']:
+        print("Ubicación inválida")
+        return
+    for nombre_archivo in archivos:
+        nombre_base, extension = os.path.splitext(nombre_archivo)
+        nuevo_nombre = ""
+        if ubicacion == '1':
+            nuevo_nombre = f"{palabra_a_agregar}{nombre_base}{extension}"
+        elif ubicacion == '2':
+            nuevo_nombre = f"{nombre_base}{palabra_a_agregar}{extension}"
+        ruta_antigua = os.path.join(directorio_actual, nombre_archivo)
+        ruta_nueva = os.path.join(directorio_actual, nuevo_nombre)
+        try:
+            os.rename(ruta_antigua, ruta_nueva)
+            print(f"Renombrado: '{nombre_archivo}' a '{nuevo_nombre}'")
+        except OSError as e:
+            print(f"Error al renombrar '{nombre_archivo}': {e}")
+
+if __name__ == "__main__":
+    renombrar_archivos()
+    input("\nCerrar")
